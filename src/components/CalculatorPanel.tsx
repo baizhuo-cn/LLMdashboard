@@ -6,13 +6,11 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { FileText } from "lucide-react";
 import type { PricingModel } from '../data/types';
-import { convertPrice, getTokenDivisor, type SupportedCurrency, type TokenUnit } from '../utils/pricing';
 import { t, formatCurrency, formatNumber, type Language } from './i18n';
 
 type CalculatorPanelProps = {
   models: PricingModel[];
-  currency: SupportedCurrency;
-  unit: TokenUnit;
+  currency: string;
   lang: Language;
 };
 

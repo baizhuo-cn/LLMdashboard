@@ -1,6 +1,5 @@
 import { ArrowUpDown, ArrowUp, ArrowDown, Star, Heart } from "lucide-react";
 import type { PricingModel } from "../data/types";
-import { convertPrice, getUnitLabelKey, type SupportedCurrency, type TokenUnit } from "../utils/pricing";
 import { t, formatCurrency, type Language } from "./i18n";
 
 export type SortField =
@@ -23,7 +22,26 @@ type PricingTableProps = {
   lang: Language;
 };
 
-export function PricingTable({ models, sortField, sortDirection, onSort, currency, unit, onToggleFavorite, lang }: PricingTableProps) {
+const getSortableValue = (model: PricingModel, field: SortField): string | number => {
+  switch (field) {
+    case "name":
+      return model.name;
+    case "inputPrice":
+      return model.inputPrice;
+    case "outputPrice":
+      return model.outputPrice;
+    case "description":
+      return model.description;
+    case "temperatureRange":
+      return model.temperatureRange;
+    case "defaultTemperature":
+      return model.defaultTemperature ?? Number.NEGATIVE_INFINITY;
+    default:
+      return "";
+  }
+};
+
+export function PricingTable({ models, sortField, sortDirection, onSort, currency, lang }: PricingTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
     if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
@@ -31,7 +49,7 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
     return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
   };
 
-  const priceUnit = t(getUnitLabelKey(unit), lang);
+  const priceUnit = t("perMillionTokens", lang);
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">

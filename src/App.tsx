@@ -11,7 +11,6 @@ import { RatingItem, type Rating } from './components/RatingItem';
 import { t, formatNumber, formatDate, formatCurrency, type Language } from './components/i18n';
 import { usePricingData } from './data/usePricing';
 import type { PricingModel } from './data/types';
-import { convertPrice, type SupportedCurrency, type TokenUnit } from './utils/pricing';
 
 const sampleRatings: Rating[] = [
   {
@@ -70,19 +69,14 @@ const sampleRatings: Rating[] = [
   },
 ];
 
-const getSortValue = (
-  model: PricingModel,
-  field: SortField,
-  currency: SupportedCurrency,
-  unit: TokenUnit
-): string | number | null => {
+const getSortValue = (model: PricingModel, field: SortField): string | number | null => {
   switch (field) {
     case 'name':
       return model.name;
     case 'inputPrice':
-      return convertPrice(model.inputPrice, currency, unit);
+      return model.inputPrice;
     case 'outputPrice':
-      return convertPrice(model.outputPrice, currency, unit);
+      return model.outputPrice;
     case 'description':
       return model.description;
     case 'temperatureRange':
@@ -126,20 +120,6 @@ export default function App() {
 
   useEffect(() => {
     if (!models.length) return;
-
-    setFavoriteIds((prev) => {
-      const availableIds = new Set(models.map((model) => model.id));
-
-      if (prev.length === 0) {
-        return models.filter((model) => model.isFavorite).map((model) => model.id);
-      }
-
-      return prev.filter((id) => availableIds.has(id));
-    });
-  }, [models]);
-
-  useEffect(() => {
-    if (!models.length) return;
     const availableIds = new Set(models.map((model) => model.id));
     setSelectedModels((prev) => {
       const filtered = prev.filter((id) => availableIds.has(id));
@@ -176,7 +156,7 @@ export default function App() {
   }, [models, favoriteIds]);
 
   const filteredModels = useMemo(() => {
-    let filtered = [...displayModels];
+    let filtered = [...models];
 
     if (filterMode === 'favorites') {
       filtered = filtered.filter((m) => m.isFavorite);
@@ -207,8 +187,8 @@ export default function App() {
           return 0;
         }
 
-        const aVal = getSortValue(a, sortField, currency, unit);
-        const bVal = getSortValue(b, sortField, currency, unit);
+        const aVal = getSortValue(a, sortField);
+        const bVal = getSortValue(b, sortField);
 
         if (typeof aVal === 'string' && typeof bVal === 'string') {
           return direction * aVal.localeCompare(bVal, lang === 'zh' ? 'zh-CN' : 'en-US');
@@ -224,7 +204,7 @@ export default function App() {
     }
 
     return filtered;
-  }, [displayModels, filterMode, provider, search, sortField, sortDirection, lang, currency, unit]);
+  }, [models, filterMode, provider, search, sortField, sortDirection, lang]);
 
   const toggleModelSelection = (modelId: string) => {
     setSelectedModels((prev) =>
@@ -248,21 +228,17 @@ export default function App() {
 
     const rows = [
       ['厂商', '模型名称', '官方输入价格', '官方输出价格', '模型说明', '温度范围', '默认温度', '常用模型', '收藏'],
-      ...filteredModels.map((model) => {
-        const input = convertPrice(model.inputPrice, currency, unit);
-        const output = convertPrice(model.outputPrice, currency, unit);
-        return [
-          model.provider,
-          model.name,
-          formatCurrency(input, currency, lang),
-          formatCurrency(output, currency, lang),
+      ...filteredModels.map((model) => [
+        model.provider,
+        model.name,
+        formatCurrency(model.inputPrice, currency, lang),
+        formatCurrency(model.outputPrice, currency, lang),
         model.description,
         model.temperatureRange,
         model.defaultTemperature ?? '',
         model.isPopular ? yesLabel : noLabel,
         model.isFavorite ? yesLabel : noLabel,
-        ];
-      }),
+      ]),
     ];
 
     const csvContent = rows
@@ -312,15 +288,15 @@ export default function App() {
 
             <FiltersBar
               providers={providers}
-              provider={provider}
-              onProviderChange={setProvider}
-              search={search}
-              onSearchChange={setSearch}
-              onExport={handleExport}
-              filterMode={filterMode}
-              onFilterModeChange={setFilterMode}
-              lang={lang}
-            />
+               provider={provider}
+               onProviderChange={setProvider}
+               search={search}
+               onSearchChange={setSearch}
+               onExport={handleExport}
+               filterMode={filterMode}
+               onFilterModeChange={setFilterMode}
+               lang={lang}
+             />
 
             <PricingTable
               models={filteredModels}
@@ -352,32 +328,18 @@ export default function App() {
              </div>
 
              <div className="grid grid-cols-2 gap-4">
-              <ComparisonChart
-                models={displayModels}
-                selectedModels={selectedModels}
-                type="input"
-                currency={currency}
-                unit={unit}
-                lang={lang}
-              />
-              <ComparisonChart
-                models={displayModels}
-                selectedModels={selectedModels}
-                type="output"
-                currency={currency}
-                unit={unit}
-                lang={lang}
-              />
-            </div>
-          </div>
-        )}
+              <ComparisonChart models={models} selectedModels={selectedModels} type="input" lang={lang} />
+              <ComparisonChart models={models} selectedModels={selectedModels} type="output" lang={lang} />
+             </div>
+           </div>
+         )}
 
-        {activeTab === 'calculator' && (
-          <div className="grid grid-cols-2 gap-6">
-            <CalculatorPanel models={displayModels} currency={currency} unit={unit} lang={lang} />
-            <BudgetPanel models={displayModels} currency={currency} unit={unit} lang={lang} />
-          </div>
-        )}
+         {activeTab === 'calculator' && (
+           <div className="grid grid-cols-2 gap-6">
+            <CalculatorPanel models={models} currency={currency} lang={lang} />
+            <BudgetPanel models={models} currency={currency} lang={lang} />
+           </div>
+         )}
 
          {activeTab === 'ratings' && (
            <div className="space-y-4">
