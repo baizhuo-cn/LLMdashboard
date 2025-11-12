@@ -5,6 +5,7 @@ import { Search, Download, Heart, Star } from "lucide-react";
 import { t, type Language } from "./i18n";
 
 type FiltersBarProps = {
+  providers: string[];
   provider: string;
   onProviderChange: (provider: string) => void;
   search: string;
@@ -15,10 +16,11 @@ type FiltersBarProps = {
   lang: Language;
 };
 
-export function FiltersBar({ 
-  provider, 
-  onProviderChange, 
-  search, 
+export function FiltersBar({
+  providers,
+  provider,
+  onProviderChange,
+  search,
   onSearchChange, 
   onExport, 
   filterMode, 
@@ -63,11 +65,11 @@ export function FiltersBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allProviders', lang)}</SelectItem>
-            <SelectItem value="openai">OpenAI</SelectItem>
-            <SelectItem value="anthropic">Anthropic</SelectItem>
-            <SelectItem value="google">Google</SelectItem>
-            <SelectItem value="deepseek">DeepSeek</SelectItem>
-            <SelectItem value="qwen">Qwen</SelectItem>
+            {providers.map((providerName) => (
+              <SelectItem key={providerName} value={providerName}>
+                {providerName}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

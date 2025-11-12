@@ -33,6 +33,7 @@ export const translations = {
     
     // Price unit
     perMillionTokens: '每百万 Token',
+    perThousandTokens: '每千 Token',
     
     // Compare
     selectModelsToCompare: '选择要对比的模型',
@@ -69,6 +70,7 @@ export const translations = {
     communityRatings: '社区评分',
     communityRatingsDesc: '查看社区基于实际使用情况对不同 LLM 模型的评分',
     votes: '票',
+    inDevelopment: '开发中',
     
     // Common
     yes: '是',
@@ -106,6 +108,7 @@ export const translations = {
     
     // Price unit
     perMillionTokens: 'per M Token',
+    perThousandTokens: 'per K Token',
     
     // Compare
     selectModelsToCompare: 'Select Models to Compare',
@@ -142,6 +145,7 @@ export const translations = {
     communityRatings: 'Community Ratings',
     communityRatingsDesc: 'See how the community rates different LLM models based on real-world usage',
     votes: 'votes',
+    inDevelopment: 'In development',
     
     // Common
     yes: 'Yes',

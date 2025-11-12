@@ -1,43 +1,37 @@
 import { ArrowUpDown, ArrowUp, ArrowDown, Star, Heart } from "lucide-react";
-import { Badge } from "./ui/badge";
+import type { PricingModel } from "../data/types";
+import { convertPrice, getUnitLabelKey, type SupportedCurrency, type TokenUnit } from "../utils/pricing";
 import { t, formatCurrency, type Language } from "./i18n";
 
-export type LLMModel = {
-  id: string;
-  name: string;
-  provider: string;
-  inputPrice: number;
-  outputPrice: number;
-  contextWindow: string;
-  tags: string[];
-  description: string;
-  temperatureRange: string;
-  defaultTemperature: number;
-  isPopular: boolean;
-  isFavorite: boolean;
-};
-
-type SortField = 'name' | 'inputPrice' | 'outputPrice' | 'description' | 'temperatureRange' | 'defaultTemperature';
-type SortDirection = 'asc' | 'desc' | null;
+export type SortField =
+  | "name"
+  | "inputPrice"
+  | "outputPrice"
+  | "description"
+  | "temperatureRange"
+  | "defaultTemperature";
+export type SortDirection = "asc" | "desc" | null;
 
 type PricingTableProps = {
-  models: LLMModel[];
+  models: PricingModel[];
   sortField: SortField | null;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
-  currency: string;
+  currency: SupportedCurrency;
+  unit: TokenUnit;
+  onToggleFavorite: (modelId: string) => void;
   lang: Language;
 };
 
-export function PricingTable({ models, sortField, sortDirection, onSort, currency, lang }: PricingTableProps) {
+export function PricingTable({ models, sortField, sortDirection, onSort, currency, unit, onToggleFavorite, lang }: PricingTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
-    if (sortDirection === 'asc') return <ArrowUp className="h-3 w-3 ml-1" />;
-    if (sortDirection === 'desc') return <ArrowDown className="h-3 w-3 ml-1" />;
+    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
+    if (sortDirection === "desc") return <ArrowDown className="h-3 w-3 ml-1" />;
     return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
   };
 
-  const priceUnit = t('perMillionTokens', lang);
+  const priceUnit = t(getUnitLabelKey(unit), lang);
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
@@ -47,63 +41,63 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
             <tr>
               <th className="px-6 py-4 text-left w-[200px]">
                 <button
-                  onClick={() => onSort('name')}
+                  onClick={() => onSort("name")}
                   className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('modelName', lang)}
+                  {t("modelName", lang)}
                   <SortIcon field="name" />
                 </button>
               </th>
               <th className="px-6 py-4 text-right w-[160px]">
                 <button
-                  onClick={() => onSort('inputPrice')}
+                  onClick={() => onSort("inputPrice")}
                   className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
                 >
-                  {t('officialInputPrice', lang)}
+                  {t("officialInputPrice", lang)}
                   <SortIcon field="inputPrice" />
                 </button>
               </th>
               <th className="px-6 py-4 text-right w-[160px]">
                 <button
-                  onClick={() => onSort('outputPrice')}
+                  onClick={() => onSort("outputPrice")}
                   className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
                 >
-                  {t('officialOutputPrice', lang)}
+                  {t("officialOutputPrice", lang)}
                   <SortIcon field="outputPrice" />
                 </button>
               </th>
               <th className="px-6 py-4 text-left min-w-[250px]">
                 <button
-                  onClick={() => onSort('description')}
+                  onClick={() => onSort("description")}
                   className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('description', lang)}
+                  {t("description", lang)}
                   <SortIcon field="description" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[120px]">
                 <button
-                  onClick={() => onSort('temperatureRange')}
+                  onClick={() => onSort("temperatureRange")}
                   className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                 >
-                  {t('temperatureRange', lang)}
+                  {t("temperatureRange", lang)}
                   <SortIcon field="temperatureRange" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[110px]">
                 <button
-                  onClick={() => onSort('defaultTemperature')}
+                  onClick={() => onSort("defaultTemperature")}
                   className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                 >
-                  {t('defaultTemperature', lang)}
+                  {t("defaultTemperature", lang)}
                   <SortIcon field="defaultTemperature" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[100px]">
-                <span className="text-sm text-muted-foreground">{t('isPopular', lang)}</span>
+                <span className="text-sm text-muted-foreground">{t("isPopular", lang)}</span>
               </th>
               <th className="px-6 py-4 text-center w-[80px]">
-                <span className="text-sm text-muted-foreground">{t('isFavorite', lang)}</span>
+                <span className="text-sm text-muted-foreground">{t("isFavorite", lang)}</span>
               </th>
             </tr>
           </thead>
@@ -120,16 +114,22 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{formatCurrency(model.inputPrice, currency, lang)}</div>
+                  <div className="font-mono">
+                    {formatCurrency(convertPrice(model.inputPrice, currency, unit), currency, lang)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{formatCurrency(model.outputPrice, currency, lang)}</div>
+                  <div className="font-mono">
+                    {formatCurrency(convertPrice(model.outputPrice, currency, unit), currency, lang)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{model.description}</td>
                 <td className="px-6 py-4 text-center text-sm">{model.temperatureRange}</td>
-                <td className="px-6 py-4 text-center text-sm font-mono">{model.defaultTemperature}</td>
+                <td className="px-6 py-4 text-center text-sm font-mono">
+                  {model.defaultTemperature ?? "-"}
+                </td>
                 <td className="px-6 py-4 text-center">
                   {model.isPopular ? (
                     <Star className="h-4 w-4 mx-auto fill-primary text-primary" />
@@ -138,11 +138,18 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   )}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  {model.isFavorite ? (
-                    <Heart className="h-4 w-4 mx-auto fill-accent text-accent" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onToggleFavorite(model.id)}
+                    className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                      model.isFavorite
+                        ? 'bg-accent/20 text-accent'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                    }`}
+                    aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
+                  >
+                    <Heart className={`h-4 w-4 ${model.isFavorite ? 'fill-current' : ''}`} />
+                  </button>
                 </td>
               </tr>
             ))}

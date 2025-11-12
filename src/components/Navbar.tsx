@@ -2,14 +2,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "./ui/badge";
 import { Sun, Moon } from "lucide-react";
 import { t, type Language } from "./i18n";
+import { type SupportedCurrency, type TokenUnit } from "../utils/pricing";
 
 type NavbarProps = {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  currency: string;
-  onCurrencyChange: (currency: string) => void;
-  unit: string;
-  onUnitChange: (unit: string) => void;
+  currency: SupportedCurrency;
+  onCurrencyChange: (currency: SupportedCurrency) => void;
+  unit: TokenUnit;
+  onUnitChange: (unit: TokenUnit) => void;
   theme: 'light' | 'dark';
   onThemeChange: (theme: 'light' | 'dark') => void;
   lang: Language;
@@ -40,7 +41,7 @@ export function Navbar({
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-[120px] py-4">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-primary" />
-          <span className="font-mono text-sm">LLMpricing</span>
+          <span className="font-mono text-sm">LLMguide模型导员</span>
           <Badge variant="outline" className="ml-2 border-muted-foreground/30 text-xs">
             {t('alpha', lang)}
           </Badge>
@@ -82,7 +83,7 @@ export function Navbar({
               </SelectContent>
             </Select>
 
-            <Select value={currency} onValueChange={onCurrencyChange}>
+            <Select value={currency} onValueChange={(value) => onCurrencyChange(value as SupportedCurrency)}>
               <SelectTrigger className="w-[100px] h-9 border-border">
                 <SelectValue />
               </SelectTrigger>
@@ -93,7 +94,7 @@ export function Navbar({
               </SelectContent>
             </Select>
 
-            <Select value={unit} onValueChange={onUnitChange}>
+            <Select value={unit} onValueChange={(value) => onUnitChange(value as TokenUnit)}>
               <SelectTrigger className="w-[110px] h-9 border-border">
                 <SelectValue />
               </SelectTrigger>
