@@ -16,7 +16,9 @@ type PricingTableProps = {
   sortField: SortField | null;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
-  currency: string;
+  currency: SupportedCurrency;
+  unit: TokenUnit;
+  onToggleFavorite: (modelId: string) => void;
   lang: Language;
 };
 
@@ -130,11 +132,15 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{formatCurrency(model.inputPrice, currency, lang)}</div>
+                  <div className="font-mono">
+                    {formatCurrency(convertPrice(model.inputPrice, currency, unit), currency, lang)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{formatCurrency(model.outputPrice, currency, lang)}</div>
+                  <div className="font-mono">
+                    {formatCurrency(convertPrice(model.outputPrice, currency, unit), currency, lang)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{model.description}</td>
@@ -150,11 +156,18 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   )}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  {model.isFavorite ? (
-                    <Heart className="h-4 w-4 mx-auto fill-accent text-accent" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onToggleFavorite(model.id)}
+                    className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                      model.isFavorite
+                        ? 'bg-accent/20 text-accent'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                    }`}
+                    aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
+                  >
+                    <Heart className={`h-4 w-4 ${model.isFavorite ? 'fill-current' : ''}`} />
+                  </button>
                 </td>
               </tr>
             ))}

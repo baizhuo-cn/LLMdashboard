@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
+import { Button } from "./ui/button";
 import { FileText } from "lucide-react";
 import type { PricingModel } from '../data/types';
 import { t, formatCurrency, formatNumber, type Language } from './i18n';
@@ -13,12 +14,13 @@ type CalculatorPanelProps = {
   lang: Language;
 };
 
-export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps) {
+export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPanelProps) {
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [pastedContent, setPastedContent] = useState<string>('');
   const [inputTokens, setInputTokens] = useState<string>('1000');
   const [outputTokens, setOutputTokens] = useState<string>('500');
   const [callsPerMonth, setCallsPerMonth] = useState<string>('1000');
+  const [result, setResult] = useState<{ perCall: number; monthly: number } | null>(null);
 
   // Estimate tokens from pasted content (1 token ≈ 4 chars)
   const estimateTokens = (text: string): number => {
@@ -31,28 +33,55 @@ export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps
     if (pastedContent) {
       const tokens = estimateTokens(pastedContent);
       setInputTokens(tokens.toString());
+      setResult(null);
     }
   }, [pastedContent]);
 
-  // Calculate costs in real-time
-  const model = models.find((m) => m.id === selectedModel);
-  const input = parseFloat(inputTokens) || 0;
-  const output = parseFloat(outputTokens) || 0;
-  const calls = parseFloat(callsPerMonth) || 0;
+  const computeCosts = () => {
+    const model = models.find((m) => m.id === selectedModel);
+    if (!model) return null;
 
-  const inputCost = model ? (input / 1000000) * model.inputPrice : 0;
-  const outputCost = model ? (output / 1000000) * model.outputPrice : 0;
-  const perCallCost = inputCost + outputCost;
-  const monthlyCost = perCallCost * calls;
+    const input = parseFloat(inputTokens) || 0;
+    const output = parseFloat(outputTokens) || 0;
+    const calls = parseFloat(callsPerMonth) || 0;
+    const divisor = getTokenDivisor(unit);
+
+    const inputPrice = convertPrice(model.inputPrice, currency, unit);
+    const outputPrice = convertPrice(model.outputPrice, currency, unit);
+
+    const inputCost = (input / divisor) * inputPrice;
+    const outputCost = (output / divisor) * outputPrice;
+    const perCallCost = inputCost + outputCost;
+    const monthlyCost = perCallCost * calls;
+
+    return { perCall: perCallCost, monthly: monthlyCost };
+  };
+
+  const handleCalculate = () => {
+    const costs = computeCosts();
+    setResult(costs);
+  };
+
+  useEffect(() => {
+    if (!result) return;
+    const costs = computeCosts();
+    setResult(costs);
+  }, [currency, unit]);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 transition-colors">
       <h3 className="text-lg mb-6">{t('singleRequestCalculator', lang)}</h3>
-      
+
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>{t('model', lang)}</Label>
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
+          <Select
+            value={selectedModel}
+            onValueChange={(value) => {
+              setSelectedModel(value);
+              setResult(null);
+            }}
+          >
             <SelectTrigger className="border-border">
               <SelectValue placeholder={t('selectModel', lang)} />
             </SelectTrigger>
@@ -73,7 +102,10 @@ export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps
           </div>
           <Textarea
             value={pastedContent}
-            onChange={(e) => setPastedContent(e.target.value)}
+            onChange={(e) => {
+              setPastedContent(e.target.value);
+              setResult(null);
+            }}
             placeholder={t('pasteContentPlaceholder', lang)}
             className="border-border min-h-[120px] resize-y font-mono text-sm"
           />
@@ -90,7 +122,10 @@ export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps
             <Input
               type="number"
               value={inputTokens}
-              onChange={(e) => setInputTokens(e.target.value)}
+              onChange={(e) => {
+                setInputTokens(e.target.value);
+                setResult(null);
+              }}
               placeholder="1000"
               className="border-border"
             />
@@ -101,7 +136,10 @@ export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps
             <Input
               type="number"
               value={outputTokens}
-              onChange={(e) => setOutputTokens(e.target.value)}
+              onChange={(e) => {
+                setOutputTokens(e.target.value);
+                setResult(null);
+              }}
               placeholder="500"
               className="border-border"
             />
@@ -113,27 +151,41 @@ export function CalculatorPanel({ models, currency, lang }: CalculatorPanelProps
           <Input
             type="number"
             value={callsPerMonth}
-            onChange={(e) => setCallsPerMonth(e.target.value)}
+            onChange={(e) => {
+              setCallsPerMonth(e.target.value);
+              setResult(null);
+            }}
             placeholder="1000"
             className="border-border"
           />
         </div>
 
-        {selectedModel && model && (
+        <Button
+          onClick={handleCalculate}
+          disabled={!selectedModel}
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
+          {t('calculateBudget', lang)}
+        </Button>
+
+        {result && selectedModel && (
           <div className="mt-6 space-y-3">
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
               <p className="text-sm text-muted-foreground mb-1">{t('perCallCost', lang)}</p>
-              <p className="text-2xl">{formatCurrency(perCallCost, currency, lang)}</p>
+              <p className="text-2xl">{formatCurrency(result.perCall, currency, lang)}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                {t('basedOnTokens', lang, { input: formatNumber(input, lang), output: formatNumber(output, lang) })}
+                {t('basedOnTokens', lang, {
+                  input: formatNumber(parseFloat(inputTokens) || 0, lang),
+                  output: formatNumber(parseFloat(outputTokens) || 0, lang),
+                })}
               </p>
             </div>
 
             <div className="p-4 rounded-lg bg-accent/10 border border-accent/30">
               <p className="text-sm text-muted-foreground mb-1">{t('monthlyEstimate', lang)}</p>
-              <p className="text-2xl">{formatCurrency(monthlyCost, currency, lang)}</p>
+              <p className="text-2xl">{formatCurrency(result.monthly, currency, lang)}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                {t('basedOnCalls', lang, { calls: formatNumber(calls, lang) })}
+                {t('basedOnCalls', lang, { calls: formatNumber(parseFloat(callsPerMonth) || 0, lang) })}
               </p>
             </div>
           </div>

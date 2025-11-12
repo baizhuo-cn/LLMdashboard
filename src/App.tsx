@@ -91,8 +91,8 @@ const getSortValue = (model: PricingModel, field: SortField): string | number | 
 export default function App() {
   const { models, providers } = usePricingData();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [currency, setCurrency] = useState('CNY');
-  const [unit, setUnit] = useState('MTok');
+  const [currency, setCurrency] = useState<SupportedCurrency>('CNY');
+  const [unit, setUnit] = useState<TokenUnit>('MTok');
   const [provider, setProvider] = useState('all');
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -102,6 +102,7 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lang, setLang] = useState<Language>('zh');
   const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'popular'>('all');
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -145,6 +146,14 @@ export default function App() {
       setSortDirection('asc');
     }
   };
+
+  const displayModels = useMemo(() => {
+    const favoritesSet = new Set(favoriteIds);
+    return models.map((model) => ({
+      ...model,
+      isFavorite: favoritesSet.has(model.id),
+    }));
+  }, [models, favoriteIds]);
 
   const filteredModels = useMemo(() => {
     let filtered = [...models];
@@ -200,6 +209,14 @@ export default function App() {
   const toggleModelSelection = (modelId: string) => {
     setSelectedModels((prev) =>
       prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId]
+    );
+  };
+
+  const toggleFavorite = (modelId: string) => {
+    setFavoriteIds((prev) =>
+      prev.includes(modelId)
+        ? prev.filter((id) => id !== modelId)
+        : [...prev, modelId]
     );
   };
 
@@ -287,6 +304,8 @@ export default function App() {
               sortDirection={sortDirection}
               onSort={handleSort}
               currency={currency}
+              unit={unit}
+              onToggleFavorite={toggleFavorite}
               lang={lang}
             />
           </div>

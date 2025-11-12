@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { t, type Language } from "./i18n";
 
 export type Rating = {
   id: string;
@@ -14,9 +15,10 @@ type RatingItemProps = {
   rating: Rating;
   selected?: boolean;
   onSelect?: () => void;
+  lang: Language;
 };
 
-export function RatingItem({ rating, selected = false, onSelect }: RatingItemProps) {
+export function RatingItem({ rating, selected = false, onSelect, lang }: RatingItemProps) {
   const stars = Math.round((rating.score / rating.maxScore) * 5);
 
   return (
@@ -54,10 +56,13 @@ export function RatingItem({ rating, selected = false, onSelect }: RatingItemPro
             <p className="text-sm">
               {rating.score}/{rating.maxScore}
             </p>
-            <p className="text-xs text-muted-foreground">{rating.votes.toLocaleString()} votes</p>
+            <p className="text-xs text-muted-foreground">
+              {rating.votes.toLocaleString()} {t('votes', lang)}
+            </p>
           </div>
         </div>
       </div>
+      <div className="px-6 pb-4 text-right text-xs text-muted-foreground">{t('inDevelopment', lang)}</div>
     </button>
   );
 }
