@@ -1,6 +1,12 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { PricingModel } from '../data/types';
-import { t, type Language } from './i18n';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import type { PricingModel } from "../data/types";
+import {
+  convertPrice,
+  getUnitLabelKey,
+  type SupportedCurrency,
+  type TokenUnit,
+} from "../utils/pricing";
+import { t, type Language } from "./i18n";
 
 type ComparisonChartProps = {
   models: PricingModel[];

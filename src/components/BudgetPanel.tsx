@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
-import type { PricingModel } from '../data/types';
-import { t, formatCurrency, formatNumber, type Language } from './i18n';
+import type { PricingModel } from "../data/types";
+import {
+  convertPrice,
+  getTokenDivisor,
+  type SupportedCurrency,
+  type TokenUnit,
+} from "../utils/pricing";
+import { t, formatCurrency, formatNumber, type Language } from "./i18n";
 
 type BudgetPanelProps = {
   models: PricingModel[];
-  currency: string;
+  currency: SupportedCurrency;
+  unit: TokenUnit;
   lang: Language;
 };
 

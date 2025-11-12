@@ -1,5 +1,11 @@
 import { ArrowUpDown, ArrowUp, ArrowDown, Star, Heart } from "lucide-react";
 import type { PricingModel } from "../data/types";
+import {
+  convertPrice,
+  getUnitLabelKey,
+  type SupportedCurrency,
+  type TokenUnit,
+} from "../utils/pricing";
 import { t, formatCurrency, type Language } from "./i18n";
 
 export type SortField =
@@ -41,7 +47,7 @@ const getSortableValue = (model: PricingModel, field: SortField): string | numbe
   }
 };
 
-export function PricingTable({ models, sortField, sortDirection, onSort, currency, lang }: PricingTableProps) {
+export function PricingTable({ models, sortField, sortDirection, onSort, currency, unit, onToggleFavorite, lang }: PricingTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
     if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
@@ -49,7 +55,7 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
     return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
   };
 
-  const priceUnit = t("perMillionTokens", lang);
+  const priceUnit = t(getUnitLabelKey(unit), lang);
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
