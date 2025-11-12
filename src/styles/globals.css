@@ -1,0 +1,228 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+
+  /* LLMpricing Design System - Light Minimal Theme */
+  /* Base Colors - Light */
+  --color-base-bg: #fafafa;
+  --color-base-fg: #0a0b0d;
+  --color-base-muted: #6b7280;
+  --color-base-card: #ffffff;
+  --color-base-line: #e5e7eb;
+
+  /* Brand Colors */
+  --color-brand-primary: #5b8fee;
+  --color-brand-accent: #10b981;
+  --color-brand-warn: #f59e0b;
+  --color-brand-danger: #ef4444;
+
+  /* Semantic Tokens */
+  --background: var(--color-base-bg);
+  --foreground: var(--color-base-fg);
+  --card: var(--color-base-card);
+  --card-foreground: var(--color-base-fg);
+  --popover: var(--color-base-card);
+  --popover-foreground: var(--color-base-fg);
+  --primary: var(--color-brand-primary);
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: var(--color-base-fg);
+  --muted: #f3f4f6;
+  --muted-foreground: var(--color-base-muted);
+  --accent: var(--color-brand-accent);
+  --accent-foreground: #ffffff;
+  --destructive: var(--color-brand-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--color-base-line);
+  --input: var(--color-base-line);
+  --input-background: var(--color-base-card);
+  --switch-background: var(--color-base-line);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: var(--color-brand-primary);
+  --chart-1: var(--color-brand-primary);
+  --chart-2: var(--color-brand-accent);
+  --chart-3: var(--color-brand-warn);
+  --chart-4: var(--color-brand-danger);
+  --chart-5: var(--color-base-muted);
+  --radius: 1rem;
+  --sidebar: var(--color-base-card);
+  --sidebar-foreground: var(--color-base-fg);
+  --sidebar-primary: var(--color-brand-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-base-bg);
+  --sidebar-accent-foreground: var(--color-base-fg);
+  --sidebar-border: var(--color-base-line);
+  --sidebar-ring: var(--color-brand-primary);
+}
+
+.dark {
+  /* Base Colors - Dark */
+  --color-base-bg: #0b0c0f;
+  --color-base-fg: #e7e7ea;
+  --color-base-muted: #9aa0a6;
+  --color-base-card: #111318;
+  --color-base-line: #1a1d23;
+
+  /* Brand Colors - Dark optimized */
+  --color-brand-primary: #7aa2ff;
+  --color-brand-accent: #71e2b2;
+  --color-brand-warn: #ffb86b;
+  --color-brand-danger: #ff6b6b;
+
+  /* Semantic Tokens */
+  --background: var(--color-base-bg);
+  --foreground: var(--color-base-fg);
+  --card: var(--color-base-card);
+  --card-foreground: var(--color-base-fg);
+  --popover: var(--color-base-card);
+  --popover-foreground: var(--color-base-fg);
+  --primary: var(--color-brand-primary);
+  --primary-foreground: var(--color-base-bg);
+  --secondary: var(--color-base-card);
+  --secondary-foreground: var(--color-base-fg);
+  --muted: var(--color-base-card);
+  --muted-foreground: var(--color-base-muted);
+  --accent: var(--color-brand-accent);
+  --accent-foreground: var(--color-base-bg);
+  --destructive: var(--color-brand-danger);
+  --destructive-foreground: var(--color-base-fg);
+  --border: var(--color-base-line);
+  --input: var(--color-base-line);
+  --input-background: var(--color-base-card);
+  --switch-background: var(--color-base-line);
+  --ring: var(--color-brand-primary);
+  --chart-1: var(--color-brand-primary);
+  --chart-2: var(--color-brand-accent);
+  --chart-3: var(--color-brand-warn);
+  --chart-4: var(--color-brand-danger);
+  --chart-5: var(--color-base-muted);
+  --sidebar: var(--color-base-card);
+  --sidebar-foreground: var(--color-base-fg);
+  --sidebar-primary: var(--color-brand-primary);
+  --sidebar-primary-foreground: var(--color-base-bg);
+  --sidebar-accent: var(--color-base-bg);
+  --sidebar-accent-foreground: var(--color-base-fg);
+  --sidebar-border: var(--color-base-line);
+  --sidebar-ring: var(--color-brand-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(
+    --sidebar-primary-foreground
+  );
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(
+    --sidebar-accent-foreground
+  );
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(
+    :not(:has([class*=" text-"]), :not(:has([class^="text-"])))
+  ) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
