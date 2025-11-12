@@ -2,100 +2,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { KPIChip, KPIGroup } from './components/KPIChip';
 import { FiltersBar } from './components/FiltersBar';
-import { PricingTable, type LLMModel } from './components/PricingTable';
+import { PricingTable, type SortField, type SortDirection } from './components/PricingTable';
 import { ComparisonChart } from './components/ComparisonChart';
 import { ModelPill } from './components/ModelPill';
 import { CalculatorPanel } from './components/CalculatorPanel';
 import { BudgetPanel } from './components/BudgetPanel';
 import { RatingItem, type Rating } from './components/RatingItem';
-import { t, formatNumber, formatDate, type Language } from './components/i18n';
-
-const sampleModels: LLMModel[] = [
-  {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    provider: 'OpenAI',
-    inputPrice: 0.50,
-    outputPrice: 1.50,
-    contextWindow: '128k',
-    tags: ['general', 'cheap'],
-    description: '高性价比的通用模型，适合日常任务',
-    temperatureRange: '0-2',
-    defaultTemperature: 1.0,
-    isPopular: true,
-    isFavorite: false,
-  },
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    provider: 'OpenAI',
-    inputPrice: 5.00,
-    outputPrice: 15.00,
-    contextWindow: '128k',
-    tags: ['general', 'premium'],
-    description: '强大的多模态模型，支持文本、图像和音频',
-    temperatureRange: '0-2',
-    defaultTemperature: 1.0,
-    isPopular: true,
-    isFavorite: true,
-  },
-  {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    provider: 'Google',
-    inputPrice: 3.00,
-    outputPrice: 10.00,
-    contextWindow: '1M',
-    tags: ['general', 'long-context'],
-    description: '超长上下文窗口，适合处理大量文档',
-    temperatureRange: '0-2',
-    defaultTemperature: 1.0,
-    isPopular: false,
-    isFavorite: true,
-  },
-  {
-    id: 'claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    inputPrice: 3.00,
-    outputPrice: 15.00,
-    contextWindow: '200k',
-    tags: ['general', 'reasoning'],
-    description: '擅长长文写作和深度分析推理',
-    temperatureRange: '0-1',
-    defaultTemperature: 1.0,
-    isPopular: true,
-    isFavorite: true,
-  },
-  {
-    id: 'deepseek-r1',
-    name: 'DeepSeek R1',
-    provider: 'DeepSeek',
-    inputPrice: 0.27,
-    outputPrice: 1.10,
-    contextWindow: '64k',
-    tags: ['general', 'budget'],
-    description: '极具性价比的国产模型，推理能力强',
-    temperatureRange: '0-2',
-    defaultTemperature: 1.0,
-    isPopular: true,
-    isFavorite: false,
-  },
-  {
-    id: 'qwen2.5-72b',
-    name: 'Qwen2.5-72B',
-    provider: 'Qwen',
-    inputPrice: 0.80,
-    outputPrice: 2.40,
-    contextWindow: '128k',
-    tags: ['general', 'multilingual'],
-    description: '强大的多语言支持，中文表现优秀',
-    temperatureRange: '0-2',
-    defaultTemperature: 0.7,
-    isPopular: false,
-    isFavorite: false,
-  },
-];
+import { t, formatNumber, formatDate, formatCurrency, type Language } from './components/i18n';
+import { usePricingData } from './data/usePricing';
+import type { PricingModel } from './data/types';
 
 const sampleRatings: Rating[] = [
   {
@@ -154,18 +69,38 @@ const sampleRatings: Rating[] = [
   },
 ];
 
+const getSortValue = (model: PricingModel, field: SortField): string | number | null => {
+  switch (field) {
+    case 'name':
+      return model.name;
+    case 'inputPrice':
+      return model.inputPrice;
+    case 'outputPrice':
+      return model.outputPrice;
+    case 'description':
+      return model.description;
+    case 'temperatureRange':
+      return model.temperatureRange;
+    case 'defaultTemperature':
+      return model.defaultTemperature;
+    default:
+      return null;
+  }
+};
+
 export default function App() {
+  const { models, providers } = usePricingData();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currency, setCurrency] = useState('CNY');
   const [unit, setUnit] = useState('MTok');
   const [provider, setProvider] = useState('all');
   const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState<'name' | 'inputPrice' | 'outputPrice' | 'description' | 'temperatureRange' | 'defaultTemperature' | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
-  const [selectedModels, setSelectedModels] = useState<string[]>(['gpt-4o-mini', 'gpt-4o', 'claude-3.5-sonnet']);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedRating, setSelectedRating] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [lang, setLang] = useState<'zh' | 'en'>('zh');
+  const [lang, setLang] = useState<Language>('zh');
   const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'popular'>('all');
 
   useEffect(() => {
@@ -176,7 +111,28 @@ export default function App() {
     }
   }, [theme]);
 
-  const handleSort = (field: 'name' | 'inputPrice' | 'outputPrice' | 'description' | 'temperatureRange' | 'defaultTemperature') => {
+  useEffect(() => {
+    if (provider !== 'all' && !providers.includes(provider)) {
+      setProvider('all');
+    }
+  }, [provider, providers]);
+
+  useEffect(() => {
+    if (!models.length) return;
+    const availableIds = new Set(models.map((model) => model.id));
+    setSelectedModels((prev) => {
+      const filtered = prev.filter((id) => availableIds.has(id));
+      if (filtered.length === 0) {
+        return models.slice(0, Math.min(3, models.length)).map((model) => model.id);
+      }
+      if (filtered.length !== prev.length) {
+        return filtered;
+      }
+      return prev;
+    });
+  }, [models]);
+
+  const handleSort = (field: SortField) => {
     if (sortField === field) {
       if (sortDirection === 'asc') {
         setSortDirection('desc');
@@ -191,9 +147,8 @@ export default function App() {
   };
 
   const filteredModels = useMemo(() => {
-    let filtered = [...sampleModels];
+    let filtered = [...models];
 
-    // Apply filter mode
     if (filterMode === 'favorites') {
       filtered = filtered.filter((m) => m.isFavorite);
     } else if (filterMode === 'popular') {
@@ -201,35 +156,46 @@ export default function App() {
     }
 
     if (provider !== 'all') {
-      filtered = filtered.filter((m) => m.provider.toLowerCase() === provider.toLowerCase());
+      filtered = filtered.filter((m) => m.provider === provider);
     }
 
     if (search) {
-      filtered = filtered.filter(
-        (m) =>
-          m.name.toLowerCase().includes(search.toLowerCase()) ||
-          m.provider.toLowerCase().includes(search.toLowerCase()) ||
-          m.description.toLowerCase().includes(search.toLowerCase()) ||
-          m.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
-      );
+      const keyword = search.toLowerCase();
+      filtered = filtered.filter((m) => {
+        const fields = [m.name, m.provider, m.description, m.temperatureRange];
+        return fields.some((field) => field.toLowerCase().includes(keyword));
+      });
     }
 
     if (sortField && sortDirection) {
+      const direction = sortDirection === 'asc' ? 1 : -1;
       filtered.sort((a, b) => {
-        let aVal: string | number = a[sortField];
-        let bVal: string | number = b[sortField];
+        if (sortField === 'defaultTemperature') {
+          const aTemp = a.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+          const bTemp = b.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
+          if (aTemp < bTemp) return -1 * direction;
+          if (aTemp > bTemp) return 1 * direction;
+          return 0;
+        }
 
-        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        const aVal = getSortValue(a, sortField);
+        const bVal = getSortValue(b, sortField);
 
-        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return direction * aVal.localeCompare(bVal, lang === 'zh' ? 'zh-CN' : 'en-US');
+        }
+
+        const aNum = typeof aVal === 'number' ? aVal : 0;
+        const bNum = typeof bVal === 'number' ? bVal : 0;
+
+        if (aNum < bNum) return -1 * direction;
+        if (aNum > bNum) return 1 * direction;
         return 0;
       });
     }
 
     return filtered;
-  }, [provider, search, sortField, sortDirection, filterMode]);
+  }, [models, filterMode, provider, search, sortField, sortDirection, lang]);
 
   const toggleModelSelection = (modelId: string) => {
     setSelectedModels((prev) =>
@@ -238,25 +204,42 @@ export default function App() {
   };
 
   const handleExport = () => {
-    const csv = [
-      ['Model', 'Provider', 'Input Price', 'Output Price', 'Context Window', 'Tags'],
-      ...filteredModels.map((m) => [
-        m.name,
-        m.provider,
-        m.inputPrice.toString(),
-        m.outputPrice.toString(),
-        m.contextWindow,
-        m.tags.join('; '),
+    if (!filteredModels.length) return;
+
+    const yesLabel = t('yes', lang);
+    const noLabel = t('no', lang);
+
+    const rows = [
+      ['厂商', '模型名称', '官方输入价格', '官方输出价格', '模型说明', '温度范围', '默认温度', '常用模型', '收藏'],
+      ...filteredModels.map((model) => [
+        model.provider,
+        model.name,
+        formatCurrency(model.inputPrice, currency, lang),
+        formatCurrency(model.outputPrice, currency, lang),
+        model.description,
+        model.temperatureRange,
+        model.defaultTemperature ?? '',
+        model.isPopular ? yesLabel : noLabel,
+        model.isFavorite ? yesLabel : noLabel,
       ]),
-    ]
-      .map((row) => row.join(','))
+    ];
+
+    const csvContent = rows
+      .map((row) =>
+        row
+          .map((value) => {
+            const cell = String(value ?? '').replace(/"/g, '""');
+            return `"${cell}"`;
+          })
+          .join(',')
+      )
       .join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'llm-pricing.csv';
+    a.download = 'pricing_total.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -282,20 +265,21 @@ export default function App() {
         {activeTab === 'dashboard' && (
           <div className="space-y-4">
             <KPIGroup>
-              <KPIChip label={t('totalModels', lang)} value={formatNumber(sampleModels.length, lang)} variant="default" />
+              <KPIChip label={t('totalModels', lang)} value={formatNumber(models.length, lang)} variant="default" />
               <KPIChip label={t('lastUpdate', lang)} value={formatDate(lastUpdate, lang)} variant="accent" />
             </KPIGroup>
 
             <FiltersBar
-              provider={provider}
-              onProviderChange={setProvider}
-              search={search}
-              onSearchChange={setSearch}
-              onExport={handleExport}
-              filterMode={filterMode}
-              onFilterModeChange={setFilterMode}
-              lang={lang}
-            />
+              providers={providers}
+               provider={provider}
+               onProviderChange={setProvider}
+               search={search}
+               onSearchChange={setSearch}
+               onExport={handleExport}
+               filterMode={filterMode}
+               onFilterModeChange={setFilterMode}
+               lang={lang}
+             />
 
             <PricingTable
               models={filteredModels}
@@ -313,54 +297,54 @@ export default function App() {
             <div className="rounded-2xl border border-border bg-card p-6">
               <h3 className="text-lg mb-4">{t('selectModelsToCompare', lang)}</h3>
               <div className="flex flex-wrap gap-2">
-                {sampleModels.map((model) => (
-                  <ModelPill
-                    key={model.id}
-                    name={model.name}
-                    selected={selectedModels.includes(model.id)}
-                    onToggle={() => toggleModelSelection(model.id)}
-                  />
-                ))}
-              </div>
-            </div>
+                {models.map((model) => (
+                   <ModelPill
+                     key={model.id}
+                     name={model.name}
+                     selected={selectedModels.includes(model.id)}
+                     onToggle={() => toggleModelSelection(model.id)}
+                   />
+                 ))}
+               </div>
+             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <ComparisonChart models={sampleModels} selectedModels={selectedModels} type="input" lang={lang} />
-              <ComparisonChart models={sampleModels} selectedModels={selectedModels} type="output" lang={lang} />
-            </div>
-          </div>
-        )}
+             <div className="grid grid-cols-2 gap-4">
+              <ComparisonChart models={models} selectedModels={selectedModels} type="input" lang={lang} />
+              <ComparisonChart models={models} selectedModels={selectedModels} type="output" lang={lang} />
+             </div>
+           </div>
+         )}
 
-        {activeTab === 'calculator' && (
-          <div className="grid grid-cols-2 gap-6">
-            <CalculatorPanel models={sampleModels} currency={currency} lang={lang} />
-            <BudgetPanel models={sampleModels} currency={currency} lang={lang} />
-          </div>
-        )}
+         {activeTab === 'calculator' && (
+           <div className="grid grid-cols-2 gap-6">
+            <CalculatorPanel models={models} currency={currency} lang={lang} />
+            <BudgetPanel models={models} currency={currency} lang={lang} />
+           </div>
+         )}
 
-        {activeTab === 'ratings' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-xl mb-2">{t('communityRatings', lang)}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t('communityRatingsDesc', lang)}
-              </p>
-            </div>
+         {activeTab === 'ratings' && (
+           <div className="space-y-4">
+             <div className="rounded-2xl border border-border bg-card p-6">
+               <h2 className="text-xl mb-2">{t('communityRatings', lang)}</h2>
+               <p className="text-sm text-muted-foreground">
+                 {t('communityRatingsDesc', lang)}
+               </p>
+             </div>
 
-            <div className="space-y-3">
-              {sampleRatings.map((rating) => (
-                <RatingItem
-                  key={rating.id}
-                  rating={rating}
-                  selected={selectedRating === rating.id}
-                  onSelect={() => setSelectedRating(rating.id === selectedRating ? null : rating.id)}
-                  lang={lang}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+             <div className="space-y-3">
+               {sampleRatings.map((rating) => (
+                 <RatingItem
+                   key={rating.id}
+                   rating={rating}
+                   selected={selectedRating === rating.id}
+                   onSelect={() => setSelectedRating(rating.id === selectedRating ? null : rating.id)}
+                   lang={lang}
+                 />
+               ))}
+             </div>
+           </div>
+         )}
+       </main>
+     </div>
   );
 }

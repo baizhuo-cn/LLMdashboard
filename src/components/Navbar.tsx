@@ -40,7 +40,7 @@ export function Navbar({
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-[120px] py-4">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-primary" />
-          <span className="font-mono text-sm">LLMpricing</span>
+          <span className="font-mono text-sm">LLMguide模型导员</span>
           <Badge variant="outline" className="ml-2 border-muted-foreground/30 text-xs">
             {t('alpha', lang)}
           </Badge>

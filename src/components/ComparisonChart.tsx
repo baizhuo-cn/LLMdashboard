@@ -1,9 +1,9 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { LLMModel } from './PricingTable';
+import type { PricingModel } from '../data/types';
 import { t, type Language } from './i18n';
 
 type ComparisonChartProps = {
-  models: LLMModel[];
+  models: PricingModel[];
   selectedModels: string[];
   type: 'input' | 'output';
   lang: Language;
