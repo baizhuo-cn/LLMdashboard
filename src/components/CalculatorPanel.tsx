@@ -4,11 +4,11 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { FileText } from "lucide-react";
-import type { LLMModel } from './PricingTable';
+import type { PricingModel } from '../data/types';
 import { t, formatCurrency, formatNumber, type Language } from './i18n';
 
 type CalculatorPanelProps = {
-  models: LLMModel[];
+  models: PricingModel[];
   currency: string;
   lang: Language;
 };

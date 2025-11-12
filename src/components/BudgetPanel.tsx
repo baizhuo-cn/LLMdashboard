@@ -3,11 +3,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
-import type { LLMModel } from './PricingTable';
+import type { PricingModel } from '../data/types';
 import { t, formatCurrency, formatNumber, type Language } from './i18n';
 
 type BudgetPanelProps = {
-  models: LLMModel[];
+  models: PricingModel[];
   currency: string;
   lang: Language;
 };

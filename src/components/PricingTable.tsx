@@ -1,27 +1,18 @@
 import { ArrowUpDown, ArrowUp, ArrowDown, Star, Heart } from "lucide-react";
-import { Badge } from "./ui/badge";
+import type { PricingModel } from "../data/types";
 import { t, formatCurrency, type Language } from "./i18n";
 
-export type LLMModel = {
-  id: string;
-  name: string;
-  provider: string;
-  inputPrice: number;
-  outputPrice: number;
-  contextWindow: string;
-  tags: string[];
-  description: string;
-  temperatureRange: string;
-  defaultTemperature: number;
-  isPopular: boolean;
-  isFavorite: boolean;
-};
-
-type SortField = 'name' | 'inputPrice' | 'outputPrice' | 'description' | 'temperatureRange' | 'defaultTemperature';
-type SortDirection = 'asc' | 'desc' | null;
+export type SortField =
+  | "name"
+  | "inputPrice"
+  | "outputPrice"
+  | "description"
+  | "temperatureRange"
+  | "defaultTemperature";
+export type SortDirection = "asc" | "desc" | null;
 
 type PricingTableProps = {
-  models: LLMModel[];
+  models: PricingModel[];
   sortField: SortField | null;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
@@ -29,15 +20,34 @@ type PricingTableProps = {
   lang: Language;
 };
 
+const getSortableValue = (model: PricingModel, field: SortField): string | number => {
+  switch (field) {
+    case "name":
+      return model.name;
+    case "inputPrice":
+      return model.inputPrice;
+    case "outputPrice":
+      return model.outputPrice;
+    case "description":
+      return model.description;
+    case "temperatureRange":
+      return model.temperatureRange;
+    case "defaultTemperature":
+      return model.defaultTemperature ?? Number.NEGATIVE_INFINITY;
+    default:
+      return "";
+  }
+};
+
 export function PricingTable({ models, sortField, sortDirection, onSort, currency, lang }: PricingTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
-    if (sortDirection === 'asc') return <ArrowUp className="h-3 w-3 ml-1" />;
-    if (sortDirection === 'desc') return <ArrowDown className="h-3 w-3 ml-1" />;
+    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
+    if (sortDirection === "desc") return <ArrowDown className="h-3 w-3 ml-1" />;
     return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
   };
 
-  const priceUnit = t('perMillionTokens', lang);
+  const priceUnit = t("perMillionTokens", lang);
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
@@ -47,63 +57,63 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
             <tr>
               <th className="px-6 py-4 text-left w-[200px]">
                 <button
-                  onClick={() => onSort('name')}
+                  onClick={() => onSort("name")}
                   className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('modelName', lang)}
+                  {t("modelName", lang)}
                   <SortIcon field="name" />
                 </button>
               </th>
               <th className="px-6 py-4 text-right w-[160px]">
                 <button
-                  onClick={() => onSort('inputPrice')}
+                  onClick={() => onSort("inputPrice")}
                   className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
                 >
-                  {t('officialInputPrice', lang)}
+                  {t("officialInputPrice", lang)}
                   <SortIcon field="inputPrice" />
                 </button>
               </th>
               <th className="px-6 py-4 text-right w-[160px]">
                 <button
-                  onClick={() => onSort('outputPrice')}
+                  onClick={() => onSort("outputPrice")}
                   className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
                 >
-                  {t('officialOutputPrice', lang)}
+                  {t("officialOutputPrice", lang)}
                   <SortIcon field="outputPrice" />
                 </button>
               </th>
               <th className="px-6 py-4 text-left min-w-[250px]">
                 <button
-                  onClick={() => onSort('description')}
+                  onClick={() => onSort("description")}
                   className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t('description', lang)}
+                  {t("description", lang)}
                   <SortIcon field="description" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[120px]">
                 <button
-                  onClick={() => onSort('temperatureRange')}
+                  onClick={() => onSort("temperatureRange")}
                   className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                 >
-                  {t('temperatureRange', lang)}
+                  {t("temperatureRange", lang)}
                   <SortIcon field="temperatureRange" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[110px]">
                 <button
-                  onClick={() => onSort('defaultTemperature')}
+                  onClick={() => onSort("defaultTemperature")}
                   className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                 >
-                  {t('defaultTemperature', lang)}
+                  {t("defaultTemperature", lang)}
                   <SortIcon field="defaultTemperature" />
                 </button>
               </th>
               <th className="px-6 py-4 text-center w-[100px]">
-                <span className="text-sm text-muted-foreground">{t('isPopular', lang)}</span>
+                <span className="text-sm text-muted-foreground">{t("isPopular", lang)}</span>
               </th>
               <th className="px-6 py-4 text-center w-[80px]">
-                <span className="text-sm text-muted-foreground">{t('isFavorite', lang)}</span>
+                <span className="text-sm text-muted-foreground">{t("isFavorite", lang)}</span>
               </th>
             </tr>
           </thead>
@@ -129,7 +139,9 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{model.description}</td>
                 <td className="px-6 py-4 text-center text-sm">{model.temperatureRange}</td>
-                <td className="px-6 py-4 text-center text-sm font-mono">{model.defaultTemperature}</td>
+                <td className="px-6 py-4 text-center text-sm font-mono">
+                  {model.defaultTemperature ?? "-"}
+                </td>
                 <td className="px-6 py-4 text-center">
                   {model.isPopular ? (
                     <Star className="h-4 w-4 mx-auto fill-primary text-primary" />
