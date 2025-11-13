@@ -40,16 +40,16 @@ Claude（Anthropic）,Claude Opus 4,￥106.80,￥534.00,Claude Opus 4.1的旧版
 通义千问（阿里云）,qwen-QWQ-Plus,￥1.60,￥4.00,基于 Qwen2.5 模型训练的 QwQ 推理模型，通过强化学习大幅度提升了模型推理能力。模型数学代码等核心指标（AIME 24/25、LiveCodeBench）以及部分通用指标（IFEval、LiveBench等）达到DeepSeek-R1 满血版水平,[0-2）,0.5,,
 通义千问（阿里云）,qwen-QWQ-32B,￥2.00,￥6.00,基于 Qwen2.5-32B 模型训练的 QwQ 推理模型，通过强化学习大幅度提升了模型推理能力。模型数学代码等核心指标（AIME 24/25、LiveCodeBench）以及部分通用指标（IFEval、LiveBench等）达到DeepSeek-R1 满血版水平，各指标均显著超过同样基于 Qwen2.5-32B 的 DeepSeek-R1-Distill-Qwen-32B,[0-2）,0.7,,
 通义千问（阿里云）,qwen-flash（128k）,￥0.15,￥1.50,通义千问系列速度最快、成本极低的模型，适合简单任务。通义千问Flash采用灵活的阶梯定价，相比通义千问Turbo计费更合理。,[0-2）,0.7,是,
-月之暗面,kimi-k2-0905,￥0.00,￥0.02,"kimi-k2 是一款具备超强代码和 Agent 能力的 MoE 架构基础模型，总参数 1T，激活参数 32B。在通用知识推理、编程、数学、Agent 等主要类别的基准性能测试中，K2 模型的性能超过其他主流开源模型。0905版本上下文长度 256k，在 0711 版本基础上增强了 Agentic Coding 能力、前端代码美观度和实用性、以及上下文理解能力
+月之暗面,kimi-k2-0905,￥4.00,￥16.00,"kimi-k2 是一款具备超强代码和 Agent 能力的 MoE 架构基础模型，总参数 1T，激活参数 32B。在通用知识推理、编程、数学、Agent 等主要类别的基准性能测试中，K2 模型的性能超过其他主流开源模型。0905版本上下文长度 256k，在 0711 版本基础上增强了 Agentic Coding 能力、前端代码美观度和实用性、以及上下文理解能力
 
 推荐温度0.6",[0-1],0,,
-月之暗面,kimi-k2-thinking,￥0.00,￥0.02,"kimi-k2-thinking 模型上下文长度 256k，是具有通用 Agentic 能力和推理能力的思考模型，它擅长深度推理使用须知
+月之暗面,kimi-k2-thinking,￥4.00,￥16.00,"kimi-k2-thinking 模型上下文长度 256k，是具有通用 Agentic 能力和推理能力的思考模型，它擅长深度推理使用须知
 
 推荐温度1.0",[0-1],0,,
-月之暗面,kimi-k2-thinking-turbo,￥0.01,￥0.06,"kimi-k2-thinking-turbo 模型上下文长度 256k，是 kimi-k2-thinking 模型的高速版，适用于需要深度推理和追求极致高速的场景
+月之暗面,kimi-k2-thinking-turbo,￥8.00,￥58.00,"kimi-k2-thinking-turbo 模型上下文长度 256k，是 kimi-k2-thinking 模型的高速版，适用于需要深度推理和追求极致高速的场景
 
 推荐温度1.0",[0-1],0,,
-月之暗面,kimi-k2-turbo,￥0.01,￥0.06,"【官方推荐】Kimi-k2-turbo-preview 模型上下文长度 256k，是 kimi k2 的高速版本模型，始终对标最新版本的 kimi-k2 模型（kimi-k2-0905-preview）。模型参数与 kimi-k2 一致，但输出速度已提至每秒 60 tokens，最高可达每秒 100 tokens
+月之暗面,kimi-k2-turbo,￥8.00,￥58.00,"【官方推荐】Kimi-k2-turbo-preview 模型上下文长度 256k，是 kimi k2 的高速版本模型，始终对标最新版本的 kimi-k2 模型（kimi-k2-0905-preview）。模型参数与 kimi-k2 一致，但输出速度已提至每秒 60 tokens，最高可达每秒 100 tokens
 
 推荐温度0.6",[0-1],0,,
 ,,,,,,,,

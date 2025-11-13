@@ -56,6 +56,7 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
   };
 
   const priceUnit = t(getUnitLabelKey(unit), lang);
+  const priceDecimals = unit === 'KTok' ? 5 : 2;
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
@@ -139,13 +140,23 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="font-mono">
-                    {formatCurrency(convertPrice(model.inputPrice, currency, unit), currency, lang)}
+                    {formatCurrency(
+                      convertPrice(model.inputPrice, currency, unit),
+                      currency,
+                      lang,
+                      priceDecimals
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="font-mono">
-                    {formatCurrency(convertPrice(model.outputPrice, currency, unit), currency, lang)}
+                    {formatCurrency(
+                      convertPrice(model.outputPrice, currency, unit),
+                      currency,
+                      lang,
+                      priceDecimals
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>

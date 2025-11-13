@@ -1,16 +1,18 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { KPIChip, KPIGroup } from './components/KPIChip';
 import { FiltersBar } from './components/FiltersBar';
 import { PricingTable, type SortField, type SortDirection } from './components/PricingTable';
 import { ComparisonChart } from './components/ComparisonChart';
-import { ModelPill } from './components/ModelPill';
 import { CalculatorPanel } from './components/CalculatorPanel';
 import { BudgetPanel } from './components/BudgetPanel';
 import { RatingItem, type Rating } from './components/RatingItem';
 import { t, formatNumber, formatDate, formatCurrency, type Language } from './components/i18n';
 import { usePricingData } from './data/usePricing';
 import type { PricingModel } from './data/types';
+import { ModelCompareSelect } from './components/ModelCompareSelect';
+import { Button } from './components/ui/button';
+import { Plus } from 'lucide-react';
 
 const sampleRatings: Rating[] = [
   {
@@ -88,6 +90,9 @@ const getSortValue = (model: PricingModel, field: SortField): string | number | 
   }
 };
 
+const MIN_COMPARE_SLOTS = 2;
+const MAX_COMPARE_SLOTS = 5;
+
 export default function App() {
   const { models, providers } = usePricingData();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -97,12 +102,13 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedRating, setSelectedRating] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lang, setLang] = useState<Language>('zh');
   const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'popular'>('all');
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const favoritesInitialized = useRef(false);
+  const [compareSlots, setCompareSlots] = useState<string[]>(() => Array.from({ length: MIN_COMPARE_SLOTS }, () => ''));
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -120,16 +126,52 @@ export default function App() {
 
   useEffect(() => {
     if (!models.length) return;
-    const availableIds = new Set(models.map((model) => model.id));
-    setSelectedModels((prev) => {
-      const filtered = prev.filter((id) => availableIds.has(id));
-      if (filtered.length === 0) {
-        return models.slice(0, Math.min(3, models.length)).map((model) => model.id);
+
+    setFavoriteIds((prev) => {
+      const availableIds = new Set(models.map((model) => model.id));
+      const cleaned = prev.filter((id) => availableIds.has(id));
+
+      if (!favoritesInitialized.current) {
+        favoritesInitialized.current = true;
+        if (cleaned.length === 0) {
+          const initial = models.filter((model) => model.isFavorite).map((model) => model.id);
+          return initial.length ? initial : cleaned;
+        }
       }
-      if (filtered.length !== prev.length) {
-        return filtered;
+
+      if (cleaned.length !== prev.length) {
+        return cleaned;
       }
       return prev;
+    });
+  }, [models]);
+
+  useEffect(() => {
+    if (!models.length) return;
+
+    setCompareSlots((prev) => {
+      const normalized = prev.length
+        ? [...prev]
+        : Array.from({ length: MIN_COMPARE_SLOTS }, () => '');
+
+      const availableIds = new Set(models.map((model) => model.id));
+      let changed = false;
+      for (let i = 0; i < normalized.length; i += 1) {
+        if (normalized[i] && !availableIds.has(normalized[i])) {
+          normalized[i] = '';
+          changed = true;
+        }
+      }
+
+      if (normalized.length < MIN_COMPARE_SLOTS) {
+        return [...normalized, ...Array.from({ length: MIN_COMPARE_SLOTS - normalized.length }, () => '')];
+      }
+
+      if (normalized.length > MAX_COMPARE_SLOTS) {
+        return normalized.slice(0, MAX_COMPARE_SLOTS);
+      }
+
+      return changed ? normalized : prev;
     });
   }, [models]);
 
@@ -156,7 +198,7 @@ export default function App() {
   }, [models, favoriteIds]);
 
   const filteredModels = useMemo(() => {
-    let filtered = [...models];
+    let filtered = [...displayModels];
 
     if (filterMode === 'favorites') {
       filtered = filtered.filter((m) => m.isFavorite);
@@ -204,13 +246,7 @@ export default function App() {
     }
 
     return filtered;
-  }, [models, filterMode, provider, search, sortField, sortDirection, lang]);
-
-  const toggleModelSelection = (modelId: string) => {
-    setSelectedModels((prev) =>
-      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId]
-    );
-  };
+  }, [displayModels, filterMode, provider, search, sortField, sortDirection, lang]);
 
   const toggleFavorite = (modelId: string) => {
     setFavoriteIds((prev) =>
@@ -219,6 +255,33 @@ export default function App() {
         : [...prev, modelId]
     );
   };
+
+  const handleCompareSlotChange = (index: number, modelId: string) => {
+    setCompareSlots((prev) => {
+      const next = [...prev];
+      next[index] = modelId;
+      return next;
+    });
+  };
+
+  const handleAddCompareSlot = () => {
+    setCompareSlots((prev) => {
+      if (prev.length >= MAX_COMPARE_SLOTS) return prev;
+      return [...prev, ''];
+    });
+  };
+
+  const handleRemoveCompareSlot = (index: number) => {
+    setCompareSlots((prev) => {
+      if (prev.length <= MIN_COMPARE_SLOTS) return prev;
+      return prev.filter((_, idx) => idx !== index);
+    });
+  };
+
+  const selectedCompareIds = useMemo(
+    () => compareSlots.filter((slot) => Boolean(slot)),
+    [compareSlots]
+  );
 
   const handleExport = () => {
     if (!filteredModels.length) return;
@@ -314,32 +377,74 @@ export default function App() {
         {activeTab === 'compare' && (
           <div className="space-y-6">
             <div className="rounded-2xl border border-border bg-card p-6">
-              <h3 className="text-lg mb-4">{t('selectModelsToCompare', lang)}</h3>
-              <div className="flex flex-wrap gap-2">
-                {models.map((model) => (
-                   <ModelPill
-                     key={model.id}
-                     name={model.name}
-                     selected={selectedModels.includes(model.id)}
-                     onToggle={() => toggleModelSelection(model.id)}
-                   />
-                 ))}
-               </div>
-             </div>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg">{t('selectModelsToCompare', lang)}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('perMillionTokens', lang)} / {t('perThousandTokens', lang)}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="gap-2 border-border"
+                  onClick={handleAddCompareSlot}
+                  disabled={compareSlots.length >= MAX_COMPARE_SLOTS}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('addComparisonSlot', lang)}
+                </Button>
+              </div>
 
-             <div className="grid grid-cols-2 gap-4">
-              <ComparisonChart models={models} selectedModels={selectedModels} type="input" lang={lang} />
-              <ComparisonChart models={models} selectedModels={selectedModels} type="output" lang={lang} />
-             </div>
-           </div>
-         )}
+              <div className="grid gap-4 md:grid-cols-2">
+                {compareSlots.map((slot, index) => (
+                  <div
+                    key={`compare-slot-${index}`}
+                    className="rounded-xl border border-dashed border-border/70 bg-muted/5 p-4"
+                  >
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      {t('comparisonSlotLabel', lang, { index: index + 1 })}
+                    </p>
+                    <ModelCompareSelect
+                      models={models}
+                      value={slot}
+                      placeholder={t('selectModel', lang)}
+                      onChange={(modelId) => handleCompareSlotChange(index, modelId)}
+                      lang={lang}
+                      canRemove={compareSlots.length > MIN_COMPARE_SLOTS}
+                      onRemove={compareSlots.length > MIN_COMPARE_SLOTS ? () => handleRemoveCompareSlot(index) : undefined}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <ComparisonChart
+                models={models}
+                selectedModels={selectedCompareIds}
+                type="input"
+                currency={currency}
+                unit={unit}
+                lang={lang}
+              />
+              <ComparisonChart
+                models={models}
+                selectedModels={selectedCompareIds}
+                type="output"
+                currency={currency}
+                unit={unit}
+                lang={lang}
+              />
+            </div>
+          </div>
+        )}
 
          {activeTab === 'calculator' && (
            <div className="grid grid-cols-2 gap-6">
-            <CalculatorPanel models={models} currency={currency} lang={lang} />
+            <CalculatorPanel models={models} currency={currency} unit={unit} lang={lang} />
             <BudgetPanel models={models} currency={currency} lang={lang} />
-           </div>
-         )}
+          </div>
+        )}
 
          {activeTab === 'ratings' && (
            <div className="space-y-4">
