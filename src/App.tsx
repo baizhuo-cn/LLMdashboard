@@ -5,7 +5,6 @@ import { FiltersBar } from './components/FiltersBar';
 import { PricingTable, type SortField, type SortDirection } from './components/PricingTable';
 import { ComparisonChart } from './components/ComparisonChart';
 import { CalculatorPanel } from './components/CalculatorPanel';
-import { BudgetPanel } from './components/BudgetPanel';
 import { RatingItem, type Rating } from './components/RatingItem';
 import { t, formatNumber, formatDate, formatCurrency, type Language } from './components/i18n';
 import { usePricingData } from './data/usePricing';
@@ -439,10 +438,9 @@ export default function App() {
           </div>
         )}
 
-         {activeTab === 'calculator' && (
-           <div className="grid grid-cols-2 gap-6">
+        {activeTab === 'calculator' && (
+          <div className="mx-auto max-w-3xl">
             <CalculatorPanel models={models} currency={currency} unit={unit} lang={lang} />
-            <BudgetPanel models={models} currency={currency} lang={lang} />
           </div>
         )}
 

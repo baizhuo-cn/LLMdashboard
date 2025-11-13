@@ -45,15 +45,6 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
     return Math.ceil(text.length / 4);
   };
 
-  // Update input tokens when content is pasted
-  useEffect(() => {
-    if (pastedContent) {
-      const tokens = estimateTokens(pastedContent);
-      setInputTokens(tokens.toString());
-      setResult(null);
-    }
-  }, [pastedContent]);
-
   const computeCosts = () => {
     const model = models.find((m) => m.id === selectedModel);
     if (!model) return null;
