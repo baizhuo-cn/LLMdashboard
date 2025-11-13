@@ -182,9 +182,15 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
                     }`}
                     aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
+                    aria-pressed={model.isFavorite}
                   >
                     <Heart
-                      className={`h-4 w-4 ${model.isFavorite ? 'fill-current text-red-500 dark:text-red-400' : ''}`}
+                      className={`h-4 w-4 transition-colors ${
+                        model.isFavorite ? 'text-red-500 fill-red-500' : ''
+                      }`}
+                      strokeWidth={model.isFavorite ? 0 : 2}
+                      stroke={model.isFavorite ? 'none' : 'currentColor'}
+                      fill={model.isFavorite ? 'currentColor' : 'none'}
                     />
                   </button>
                 </td>
