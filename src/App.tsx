@@ -1,369 +1,135 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { KPIChip, KPIGroup } from './components/KPIChip';
-import { FiltersBar } from './components/FiltersBar';
-import { PricingTable, type SortField, type SortDirection } from './components/PricingTable';
-import { ComparisonChart } from './components/ComparisonChart';
-import { ModelPill } from './components/ModelPill';
-import { CalculatorPanel } from './components/CalculatorPanel';
-import { BudgetPanel } from './components/BudgetPanel';
-import { RatingItem, type Rating } from './components/RatingItem';
-import { t, formatNumber, formatDate, formatCurrency, type Language } from './components/i18n';
-import { usePricingData } from './data/usePricing';
-import type { PricingModel } from './data/types';
+import { useState } from 'react';
+import { models } from './data/models';
+import type { ExchangeRates, Model, TokenUnit } from './data/types';
+import { DashboardSection } from './components/DashboardSection';
+import { CompareSection } from './components/CompareSection';
+import { CalculatorSection } from './components/CalculatorSection';
+import { usePersistentState } from './hooks/usePersistentState';
 
-const sampleRatings: Rating[] = [
-  {
-    id: '1',
-    name: 'GPT-4o',
-    provider: 'OpenAI',
-    quote: 'Outstanding reasoning and code generation',
-    score: 9.2,
-    maxScore: 10,
-    votes: 15234,
-  },
-  {
-    id: '2',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    quote: 'Best for long-form writing and analysis',
-    score: 9.1,
-    maxScore: 10,
-    votes: 12456,
-  },
-  {
-    id: '3',
-    name: 'Gemini 2.5 Pro',
-    provider: 'Google',
-    quote: 'Exceptional multimodal capabilities',
-    score: 8.8,
-    maxScore: 10,
-    votes: 9872,
-  },
-  {
-    id: '4',
-    name: 'GPT-4o Mini',
-    provider: 'OpenAI',
-    quote: 'Best value for everyday tasks',
-    score: 8.4,
-    maxScore: 10,
-    votes: 18923,
-  },
-  {
-    id: '5',
-    name: 'DeepSeek R1',
-    provider: 'DeepSeek',
-    quote: 'Incredible performance at this price',
-    score: 7.9,
-    maxScore: 10,
-    votes: 7634,
-  },
-  {
-    id: '6',
-    name: 'Qwen2.5-72B',
-    provider: 'Qwen',
-    quote: 'Strong multilingual support',
-    score: 7.6,
-    maxScore: 10,
-    votes: 5421,
-  },
-];
+const FAVORITES_KEY = 'llmdashboard:favorites:v1';
+const SHOW_FAVORITES_KEY = 'llmdashboard:dashboard:showFavorites:v1';
+const UNIT_KEY = 'llmdashboard:unit:v1';
+const RATES_KEY = 'llmdashboard:calc:rates:v1';
 
-const getSortValue = (model: PricingModel, field: SortField): string | number | null => {
-  switch (field) {
-    case 'name':
-      return model.name;
-    case 'inputPrice':
-      return model.inputPrice;
-    case 'outputPrice':
-      return model.outputPrice;
-    case 'description':
-      return model.description;
-    case 'temperatureRange':
-      return model.temperatureRange;
-    case 'defaultTemperature':
-      return model.defaultTemperature;
-    default:
-      return null;
-  }
+const DEFAULT_RATES: ExchangeRates = {
+  'USD:CNY': 7.2,
+  'CNY:USD': 0.14,
 };
 
+type Tab = 'dashboard' | 'compare' | 'calculator';
+
+function getInitialCompare(list: Model[]): string[] {
+  const seed = list.slice(0, 2).map((model) => model.id);
+  while (seed.length < 2) {
+    seed.push('');
+  }
+  return seed;
+}
+
 export default function App() {
-  const { models, providers } = usePricingData();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [currency, setCurrency] = useState<SupportedCurrency>('CNY');
-  const [unit, setUnit] = useState<TokenUnit>('MTok');
-  const [provider, setProvider] = useState('all');
-  const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [selectedRating, setSelectedRating] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [lang, setLang] = useState<Language>('zh');
-  const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'popular'>('all');
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [unit, setUnit] = usePersistentState<TokenUnit>(UNIT_KEY, 'mtok');
+  const [favorites, setFavorites] = usePersistentState<string[]>(FAVORITES_KEY, []);
+  const [showFavorites, setShowFavorites] = usePersistentState<'on' | 'off'>(SHOW_FAVORITES_KEY, 'off');
+  const [compareIds, setCompareIds] = useState<string[]>(() => getInitialCompare(models));
+  const [rates, setRates] = usePersistentState<ExchangeRates>(RATES_KEY, DEFAULT_RATES);
 
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    if (provider !== 'all' && !providers.includes(provider)) {
-      setProvider('all');
-    }
-  }, [provider, providers]);
-
-  useEffect(() => {
-    if (!models.length) return;
-    const availableIds = new Set(models.map((model) => model.id));
-    setSelectedModels((prev) => {
-      const filtered = prev.filter((id) => availableIds.has(id));
-      if (filtered.length === 0) {
-        return models.slice(0, Math.min(3, models.length)).map((model) => model.id);
-      }
-      if (filtered.length !== prev.length) {
-        return filtered;
-      }
-      return prev;
-    });
-  }, [models]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      if (sortDirection === 'asc') {
-        setSortDirection('desc');
-      } else if (sortDirection === 'desc') {
-        setSortField(null);
-        setSortDirection(null);
-      }
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const displayModels = useMemo(() => {
-    const favoritesSet = new Set(favoriteIds);
-    return models.map((model) => ({
-      ...model,
-      isFavorite: favoritesSet.has(model.id),
-    }));
-  }, [models, favoriteIds]);
-
-  const filteredModels = useMemo(() => {
-    let filtered = [...models];
-
-    if (filterMode === 'favorites') {
-      filtered = filtered.filter((m) => m.isFavorite);
-    } else if (filterMode === 'popular') {
-      filtered = filtered.filter((m) => m.isPopular);
-    }
-
-    if (provider !== 'all') {
-      filtered = filtered.filter((m) => m.provider === provider);
-    }
-
-    if (search) {
-      const keyword = search.toLowerCase();
-      filtered = filtered.filter((m) => {
-        const fields = [m.name, m.provider, m.description, m.temperatureRange];
-        return fields.some((field) => field.toLowerCase().includes(keyword));
-      });
-    }
-
-    if (sortField && sortDirection) {
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      filtered.sort((a, b) => {
-        if (sortField === 'defaultTemperature') {
-          const aTemp = a.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
-          const bTemp = b.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
-          if (aTemp < bTemp) return -1 * direction;
-          if (aTemp > bTemp) return 1 * direction;
-          return 0;
-        }
-
-        const aVal = getSortValue(a, sortField);
-        const bVal = getSortValue(b, sortField);
-
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return direction * aVal.localeCompare(bVal, lang === 'zh' ? 'zh-CN' : 'en-US');
-        }
-
-        const aNum = typeof aVal === 'number' ? aVal : 0;
-        const bNum = typeof bVal === 'number' ? bVal : 0;
-
-        if (aNum < bNum) return -1 * direction;
-        if (aNum > bNum) return 1 * direction;
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [models, filterMode, provider, search, sortField, sortDirection, lang]);
-
-  const toggleModelSelection = (modelId: string) => {
-    setSelectedModels((prev) =>
+  const handleToggleFavorite = (modelId: string) => {
+    setFavorites((prev) =>
       prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId]
     );
   };
 
-  const toggleFavorite = (modelId: string) => {
-    setFavoriteIds((prev) =>
-      prev.includes(modelId)
-        ? prev.filter((id) => id !== modelId)
-        : [...prev, modelId]
-    );
+  const handleUnitChange = (next: TokenUnit) => {
+    setUnit(next);
   };
 
-  const handleExport = () => {
-    if (!filteredModels.length) return;
-
-    const yesLabel = t('yes', lang);
-    const noLabel = t('no', lang);
-
-    const rows = [
-      ['厂商', '模型名称', '官方输入价格', '官方输出价格', '模型说明', '温度范围', '默认温度', '常用模型', '收藏'],
-      ...filteredModels.map((model) => [
-        model.provider,
-        model.name,
-        formatCurrency(model.inputPrice, currency, lang),
-        formatCurrency(model.outputPrice, currency, lang),
-        model.description,
-        model.temperatureRange,
-        model.defaultTemperature ?? '',
-        model.isPopular ? yesLabel : noLabel,
-        model.isFavorite ? yesLabel : noLabel,
-      ]),
-    ];
-
-    const csvContent = rows
-      .map((row) =>
-        row
-          .map((value) => {
-            const cell = String(value ?? '').replace(/"/g, '""');
-            return `"${cell}"`;
-          })
-          .join(',')
-      )
-      .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pricing_total.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const lastUpdate = new Date('2025-11-11');
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'dashboard', label: '仪表盘' },
+    { id: 'compare', label: '对比' },
+    { id: 'calculator', label: '计算' },
+  ];
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-200">
-      <Navbar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        currency={currency}
-        onCurrencyChange={setCurrency}
-        unit={unit}
-        onUnitChange={setUnit}
-        theme={theme}
-        onThemeChange={setTheme}
-        lang={lang}
-        onLangChange={setLang}
-      />
-
-      <main className="mx-auto max-w-[1440px] px-[120px] py-8">
-        {activeTab === 'dashboard' && (
-          <div className="space-y-4">
-            <KPIGroup>
-              <KPIChip label={t('totalModels', lang)} value={formatNumber(models.length, lang)} variant="default" />
-              <KPIChip label={t('lastUpdate', lang)} value={formatDate(lastUpdate, lang)} variant="accent" />
-            </KPIGroup>
-
-            <FiltersBar
-              providers={providers}
-               provider={provider}
-               onProviderChange={setProvider}
-               search={search}
-               onSearchChange={setSearch}
-               onExport={handleExport}
-               filterMode={filterMode}
-               onFilterModeChange={setFilterMode}
-               lang={lang}
-             />
-
-            <PricingTable
-              models={filteredModels}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              currency={currency}
-              unit={unit}
-              onToggleFavorite={toggleFavorite}
-              lang={lang}
-            />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-card/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-wide text-muted-foreground">LLMdashboard</p>
+            <h1 className="text-2xl font-semibold">模型价格一览</h1>
+            <p className="text-sm text-muted-foreground">
+              数据源自 pricing_total.csv，支持收藏、对比与成本计算。
+            </p>
           </div>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full border border-border p-1">
+              {(['mtok', 'ktok'] as TokenUnit[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => handleUnitChange(option)}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    unit === option
+                      ? 'rounded-full bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  aria-pressed={unit === option}
+                >
+                  {option.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <nav className="mx-auto flex max-w-6xl gap-2 px-6 pb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-6xl space-y-8 px-6 py-8">
+        {activeTab === 'dashboard' && (
+          <DashboardSection
+            models={models}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+            unit={unit}
+            showFavorites={showFavorites}
+            onShowFavoritesChange={setShowFavorites}
+          />
         )}
 
         {activeTab === 'compare' && (
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h3 className="text-lg mb-4">{t('selectModelsToCompare', lang)}</h3>
-              <div className="flex flex-wrap gap-2">
-                {models.map((model) => (
-                   <ModelPill
-                     key={model.id}
-                     name={model.name}
-                     selected={selectedModels.includes(model.id)}
-                     onToggle={() => toggleModelSelection(model.id)}
-                   />
-                 ))}
-               </div>
-             </div>
+          <CompareSection
+            models={models}
+            selectedIds={compareIds}
+            onChange={setCompareIds}
+            unit={unit}
+            rates={{ ...DEFAULT_RATES, ...rates }}
+          />
+        )}
 
-             <div className="grid grid-cols-2 gap-4">
-              <ComparisonChart models={models} selectedModels={selectedModels} type="input" lang={lang} />
-              <ComparisonChart models={models} selectedModels={selectedModels} type="output" lang={lang} />
-             </div>
-           </div>
-         )}
-
-         {activeTab === 'calculator' && (
-           <div className="grid grid-cols-2 gap-6">
-            <CalculatorPanel models={models} currency={currency} lang={lang} />
-            <BudgetPanel models={models} currency={currency} lang={lang} />
-           </div>
-         )}
-
-         {activeTab === 'ratings' && (
-           <div className="space-y-4">
-             <div className="rounded-2xl border border-border bg-card p-6">
-               <h2 className="text-xl mb-2">{t('communityRatings', lang)}</h2>
-               <p className="text-sm text-muted-foreground">
-                 {t('communityRatingsDesc', lang)}
-               </p>
-             </div>
-
-             <div className="space-y-3">
-               {sampleRatings.map((rating) => (
-                 <RatingItem
-                   key={rating.id}
-                   rating={rating}
-                   selected={selectedRating === rating.id}
-                   onSelect={() => setSelectedRating(rating.id === selectedRating ? null : rating.id)}
-                   lang={lang}
-                 />
-               ))}
-             </div>
-           </div>
-         )}
-       </main>
-     </div>
+        {activeTab === 'calculator' && (
+          <CalculatorSection
+            models={models}
+            unit={unit}
+            rates={{ ...DEFAULT_RATES, ...rates }}
+            onRatesChange={setRates}
+          />
+        )}
+      </main>
+    </div>
   );
 }
