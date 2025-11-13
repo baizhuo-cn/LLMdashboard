@@ -1,11 +1,20 @@
+# LLM Pricing Dashboard
 
-  # Design System for LLMpricing
+A Vite + React dashboard that tracks large language model pricing data. The interface mirrors the production UI of the LLMpricing design system while adding a few productivity enhancements for day-to-day analysis.
 
-  This is a code bundle for Design System for LLMpricing. The original project is available at https://www.figma.com/design/FVJ38CmvANxI5bvh2JAjBM/Design-System-for-LLMpricing.
+## Features
+- 📊 **Dashboard：** 浏览所有模型的官方输入/输出价格，支持按厂商过滤、模糊搜索、收藏筛选与 CSV 导出。
+- ⚖️ **对比：** 通过可搜索的下拉框挑选 2~5 个模型进行输入/输出价格对比。
+- 🧮 **计算：** 根据输入/输出 Token 与调用频率估算单次请求和月度成本，可保存多组计算并实时求和。
+- ⭐ **社区：** 展示示例社区评分列表，便于对热门模型的主观体验进行补充。
 
-  ## Running the code
+## Getting Started
+1. 安装依赖：`npm install`
+2. 本地开发：`npm run dev`
+3. 生产构建：`npm run build`
 
-  Run `npm i` to install the dependencies.
-
-  Run `npm run dev` to start the development server.
-  
+## 技术栈
+- React + TypeScript
+- Vite 构建工具
+- Tailwind CSS + shadcn/ui 组件
+- Recharts 数据可视化

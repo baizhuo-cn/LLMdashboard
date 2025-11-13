@@ -37,9 +37,14 @@ export const translations = {
     
     // Compare
     selectModelsToCompare: '选择要对比的模型',
+    addComparisonSlot: '添加对比项',
+    comparisonSlotLabel: '对比模型 {{index}}',
+    searchModels: '搜索模型...',
+    noModelsFound: '暂无匹配模型',
+    removeSlot: '移除此项',
     inputPriceComparison: '输入价格对比',
     outputPriceComparison: '输出价格对比',
-    
+
     // Calculator
     singleRequestCalculator: '单次请求计算器',
     budgetEstimator: '预算估算器',
@@ -65,7 +70,16 @@ export const translations = {
     estimatedMonthlyCost: '预估月度成本',
     costPerRequest: '单次请求成本',
     totalRequests: '总请求数',
-    
+    saveCalculation: '保存当前结果',
+    savedCalculations: '已保存的计算',
+    savedCalculationsDesc: '保存不同模型的成本估算，方便统一查看',
+    noSavedCalculations: '暂未保存任何结果',
+    clearAll: '清空全部',
+    savedTotals: '汇总',
+    savedTotalsDesc: '所有保存结果的合计',
+    totalPerCallCost: '单次成本总和',
+    totalMonthlyCost: '月度总和',
+
     // Ratings
     communityRatings: '社区评分',
     communityRatingsDesc: '查看社区基于实际使用情况对不同 LLM 模型的评分',
@@ -112,6 +126,11 @@ export const translations = {
     
     // Compare
     selectModelsToCompare: 'Select Models to Compare',
+    addComparisonSlot: 'Add slot',
+    comparisonSlotLabel: 'Model {{index}}',
+    searchModels: 'Search models...',
+    noModelsFound: 'No models found',
+    removeSlot: 'Remove slot',
     inputPriceComparison: 'Input Price Comparison',
     outputPriceComparison: 'Output Price Comparison',
     
@@ -140,6 +159,15 @@ export const translations = {
     estimatedMonthlyCost: 'Estimated Monthly Cost',
     costPerRequest: 'Cost per Request',
     totalRequests: 'Total Requests',
+    saveCalculation: 'Save result',
+    savedCalculations: 'Saved calculations',
+    savedCalculationsDesc: 'Keep multiple estimates together for quick reference',
+    noSavedCalculations: 'No saved results yet',
+    clearAll: 'Clear all',
+    savedTotals: 'Totals',
+    savedTotalsDesc: 'Combined cost of all saved rows',
+    totalPerCallCost: 'Per-call total',
+    totalMonthlyCost: 'Monthly total',
     
     // Ratings
     communityRatings: 'Community Ratings',
@@ -165,15 +193,23 @@ export function t(key: string, lang: Language, params?: Record<string, string | 
   return text;
 }
 
-export function formatCurrency(amount: number, currency: string, lang: Language): string {
+export function formatCurrency(
+  amount: number,
+  currency: string,
+  lang: Language,
+  fractionDigits = 2
+): string {
+  const digits = Number.isFinite(fractionDigits) ? fractionDigits : 2;
+  const formatted = amount.toFixed(digits);
+
   if (currency === 'CNY') {
-    return `￥${amount.toFixed(2)}`;
+    return `￥${formatted}`;
   } else if (currency === 'USD') {
-    return `$${amount.toFixed(2)}`;
+    return `$${formatted}`;
   } else if (currency === 'EUR') {
-    return `€${amount.toFixed(2)}`;
+    return `€${formatted}`;
   }
-  return `${currency} ${amount.toFixed(2)}`;
+  return `${currency} ${formatted}`;
 }
 
 export function formatNumber(num: number, lang: Language): string {
