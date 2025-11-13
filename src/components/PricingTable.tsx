@@ -56,7 +56,7 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
   };
 
   const priceUnit = t(getUnitLabelKey(unit), lang);
-  const priceDecimals = unit === 'KTok' ? 5 : 2;
+  const priceDecimals = unit === "KTok" ? 5 : 2;
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
@@ -178,19 +178,17 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                     onClick={() => onToggleFavorite(model.id)}
                     className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
                       model.isFavorite
-                        ? 'bg-red-100 text-red-500 dark:bg-red-500/20 dark:text-red-400'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                        ? "bg-destructive-soft text-destructive"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                     }`}
                     aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
                     aria-pressed={model.isFavorite}
                   >
                     <Heart
-                      className={`h-4 w-4 transition-colors ${
-                        model.isFavorite ? 'text-red-500 fill-red-500' : ''
-                      }`}
+                      className="h-4 w-4 transition-colors"
                       strokeWidth={model.isFavorite ? 0 : 2}
-                      stroke={model.isFavorite ? 'none' : 'currentColor'}
-                      fill={model.isFavorite ? 'currentColor' : 'none'}
+                      stroke={model.isFavorite ? "none" : "currentColor"}
+                      fill={model.isFavorite ? "currentColor" : "none"}
                     />
                   </button>
                 </td>

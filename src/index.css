@@ -940,6 +940,14 @@
     background-color: var(--destructive);
   }
 
+  .bg-destructive-soft {
+    background-color: color-mix(in oklab, var(--destructive) 15%, transparent);
+  }
+
+  .dark .bg-destructive-soft {
+    background-color: color-mix(in oklab, var(--destructive) 35%, transparent);
+  }
+
   .bg-input-background {
     background-color: var(--input-background);
   }
@@ -1156,6 +1164,10 @@
 
   .text-primary-foreground {
     color: var(--primary-foreground);
+  }
+
+  .text-destructive {
+    color: var(--destructive);
   }
 
   .text-secondary-foreground {
