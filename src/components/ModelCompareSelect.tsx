@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 import type { PricingModel } from '../data/types';
 import { Button } from './ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from './ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { t, type Language } from './i18n';
 
@@ -55,26 +55,28 @@ export function ModelCompareSelect({ models, value, onChange, lang, placeholder,
         <PopoverContent className="w-[320px] p-0" align="start">
           <Command>
             <CommandInput placeholder={t('searchModels', lang)} />
-            <CommandEmpty>{t('noModelsFound', lang)}</CommandEmpty>
-            <CommandGroup>
-              {models.map((model) => (
-                <CommandItem
-                  key={model.id}
-                  value={`${model.name} ${model.provider}`}
-                  onSelect={() => {
-                    onChange(model.id);
-                    setOpen(false);
-                  }}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex flex-col text-left">
-                    <span className="text-sm font-medium">{model.name}</span>
-                    <span className="text-xs text-muted-foreground">{model.provider}</span>
-                  </div>
-                  {model.id === value && <Check className="h-4 w-4" />}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>{t('noModelsFound', lang)}</CommandEmpty>
+              <CommandGroup>
+                {models.map((model) => (
+                  <CommandItem
+                    key={model.id}
+                    value={`${model.name} ${model.provider}`}
+                    onSelect={() => {
+                      onChange(model.id);
+                      setOpen(false);
+                    }}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-medium">{model.name}</span>
+                      <span className="text-xs text-muted-foreground">{model.provider}</span>
+                    </div>
+                    {model.id === value && <Check className="h-4 w-4" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>

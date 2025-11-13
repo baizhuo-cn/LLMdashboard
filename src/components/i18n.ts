@@ -46,7 +46,7 @@ export const translations = {
     outputPriceComparison: '输出价格对比',
 
     // Calculator
-    singleRequestCalculator: '单次请求计算器',
+    singleRequestCalculator: 'Token 计算器',
     budgetEstimator: '预算估算器',
     model: '模型',
     selectModel: '选择模型',
@@ -135,7 +135,7 @@ export const translations = {
     outputPriceComparison: 'Output Price Comparison',
     
     // Calculator
-    singleRequestCalculator: 'Single Request Calculator',
+    singleRequestCalculator: 'Token Calculator',
     budgetEstimator: 'Budget Estimator',
     model: 'Model',
     selectModel: 'Select a model',

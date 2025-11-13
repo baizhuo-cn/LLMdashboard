@@ -178,12 +178,14 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                     onClick={() => onToggleFavorite(model.id)}
                     className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
                       model.isFavorite
-                        ? 'bg-accent/20 text-accent'
+                        ? 'bg-red-100 text-red-500 dark:bg-red-500/20 dark:text-red-400'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
                     }`}
                     aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
                   >
-                    <Heart className={`h-4 w-4 ${model.isFavorite ? 'fill-current' : ''}`} />
+                    <Heart
+                      className={`h-4 w-4 ${model.isFavorite ? 'fill-current text-red-500 dark:text-red-400' : ''}`}
+                    />
                   </button>
                 </td>
               </tr>
