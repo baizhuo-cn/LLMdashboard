@@ -1,38 +1,24 @@
-export type CurrencyCode = 'CNY' | 'USD';
-export type TokenUnit = 'mtok' | 'ktok';
-
-export type TokenPrice = {
-  unit: TokenUnit;
-  input: number;
-  output: number;
-  currency: CurrencyCode;
+export type PricingCsvRow = {
+  厂商: string;
+  模型名称: string;
+  官方输入价格: string;
+  官方输出价格: string;
+  模型说明: string;
+  温度范围: string;
+  默认温度: string;
+  常用模型: string;
+  收藏: string;
 };
 
-export type Model = {
+export type PricingModel = {
   id: string;
-  name: string;
   provider: string;
-  prices: {
-    mtok: TokenPrice;
-    ktok: TokenPrice;
-  };
-  tags: string[];
-  searchableText: string;
-  updatedAt: string;
-};
-
-export type ExchangeRates = {
-  'USD:CNY'?: number;
-  'CNY:USD'?: number;
-};
-
-export type CalculationRecord = {
-  id: string;
-  seq: number;
-  title: string;
-  inputCost: number;
-  outputCost: number;
-  totalCost: number;
-  note: string;
-  currency: CurrencyCode;
+  name: string;
+  inputPrice: number;
+  outputPrice: number;
+  description: string;
+  temperatureRange: string;
+  defaultTemperature: number | null;
+  isPopular: boolean;
+  isFavorite: boolean;
 };
