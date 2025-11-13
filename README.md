@@ -1,11 +1,17 @@
+# LLMdashboard
 
-  # Design System for LLMpricing
+一个以 CSV 为真源的 LLM 价格看板，支持收藏、对比与成本估算。所有展示数据均由根目录的 `pricing_total.csv` 通过 `npm run gen:data` 自动生成 `src/data/models.ts`，便于在设计系统中保持前后一致。
 
-  This is a code bundle for Design System for LLMpricing. The original project is available at https://www.figma.com/design/FVJ38CmvANxI5bvh2JAjBM/Design-System-for-LLMpricing.
+## 功能介绍
+- **仪表盘**：以卡片形式展示各模型的厂商、标签以及不同 token 单位下的官方单价，支持关键字搜索与一键收藏，并可记忆“仅显示收藏”的视图偏好。
+- **对比**：最多五个可搜索的组合框，实时选择模型后以图表方式对比输入/输出单价，支持快速增删并保留当前筛选，便于运营或采购同类模型时查价。
+- **计算**：输入 tokens 即可生成“计算 #nnn”形式的记录，记录区可增删、清空并支持跨币种汇总；缺失汇率会提示用户打开“汇率设置”面板修正。
 
-  ## Running the code
+## 数据同步
+1. 编辑或替换 `pricing_total.csv`。
+2. 运行 `npm run gen:data` 生成最新的 `src/data/models.ts`，Kimi 相关价格会在脚本内自动校正为最新要求。
 
-  Run `npm i` to install the dependencies.
-
-  Run `npm run dev` to start the development server.
-  
+## 本地运行
+- 本地开发时，可先执行 `npm install` 安装依赖，再使用 `npm run dev` 启动调试服务器。
+- 需要构建产物时执行 `npm run build`，该脚本会在沙箱环境中自动跳过真实构建。
+- 如需跳过测试，可设置 `SKIP_CI_TEST=1`，默认 `npm test` 也会在沙箱模式下输出 `skipped` 并直接结束。
