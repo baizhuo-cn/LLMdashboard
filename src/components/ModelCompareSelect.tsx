@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 import type { PricingModel } from '../data/types';
 import { Button } from './ui/button';
@@ -18,6 +18,7 @@ export type ModelCompareSelectProps = {
 
 export function ModelCompareSelect({ models, value, onChange, lang, placeholder, canRemove, onRemove }: ModelCompareSelectProps) {
   const [open, setOpen] = useState(false);
+  const commandListId = useId();
   const selectedModel = models.find((model) => model.id === value);
 
   return (
@@ -37,9 +38,13 @@ export function ModelCompareSelect({ models, value, onChange, lang, placeholder,
         <PopoverTrigger asChild>
           <Button
             variant="outline"
+            type="button"
             role="combobox"
+            aria-haspopup="listbox"
             aria-expanded={open}
+            aria-controls={commandListId}
             className="w-full justify-between border-border"
+            onClick={() => setOpen((prev) => !prev)}
           >
             <div className="flex flex-col text-left">
               <span className="text-sm font-medium leading-tight">
@@ -52,10 +57,10 @@ export function ModelCompareSelect({ models, value, onChange, lang, placeholder,
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0" align="start">
+        <PopoverContent className="w-[320px] p-0" align="start" sideOffset={8}>
           <Command>
-            <CommandInput placeholder={t('searchModels', lang)} />
-            <CommandList>
+            <CommandInput autoFocus placeholder={t('searchModels', lang)} />
+            <CommandList id={commandListId}>
               <CommandEmpty>{t('noModelsFound', lang)}</CommandEmpty>
               <CommandGroup>
                 {models.map((model) => (
