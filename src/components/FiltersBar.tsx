@@ -29,8 +29,8 @@ export function FiltersBar({
 }: FiltersBarProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Button 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
           onClick={() => onFilterModeChange('all')}
           variant={filterMode === 'all' ? 'default' : 'outline'}
           className="gap-2 border-border"
@@ -58,9 +58,9 @@ export function FiltersBar({
         </Button>
       </div>
       
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-colors sm:flex-row sm:flex-wrap sm:items-center">
         <Select value={provider} onValueChange={onProviderChange}>
-          <SelectTrigger className="w-[180px] border-border">
+          <SelectTrigger className="w-full border-border sm:w-[200px]">
             <SelectValue placeholder={t('allProviders', lang)} />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +73,7 @@ export function FiltersBar({
           </SelectContent>
         </Select>
 
-        <div className="relative flex-1">
+        <div className="relative w-full flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('searchPlaceholder', lang)}
@@ -83,7 +83,7 @@ export function FiltersBar({
           />
         </div>
 
-        <Button onClick={onExport} variant="outline" className="gap-2 border-border">
+        <Button onClick={onExport} variant="outline" className="gap-2 border-border w-full sm:w-auto">
           <Download className="h-4 w-4" />
           {t('export', lang)}
         </Button>
