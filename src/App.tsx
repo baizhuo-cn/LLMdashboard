@@ -340,7 +340,7 @@ export default function App() {
         onLangChange={setLang}
       />
 
-      <main className="mx-auto max-w-[1440px] px-[120px] py-8">
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 md:px-8 lg:px-12 xl:px-[120px]">
         {activeTab === 'dashboard' && (
           <div className="space-y-4">
             <KPIGroup>
