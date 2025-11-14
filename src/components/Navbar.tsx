@@ -64,6 +64,15 @@ export function Navbar({
             ))}
           </div>
 
+          <a
+            href="https://prompt-free.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-primary/40 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            提示词
+          </a>
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
