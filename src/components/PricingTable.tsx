@@ -5,9 +5,8 @@ import {
   getUnitLabelKey,
   type SupportedCurrency,
   type TokenUnit,
-  formatCurrency,
 } from "../utils/pricing";
-import { t, type Language } from "./i18n";
+import { t, formatCurrency, type Language } from "./i18n";
 
 export type SortField =
   | "name"
