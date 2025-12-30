@@ -323,7 +323,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const lastUpdate = new Date('2024-11-13');
+  const lastUpdate = new Date('2025-12-30');
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">

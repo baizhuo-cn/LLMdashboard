@@ -5,8 +5,9 @@ import {
   getUnitLabelKey,
   type SupportedCurrency,
   type TokenUnit,
+  formatCurrency,
 } from "../utils/pricing";
-import { t, formatCurrency, type Language } from "./i18n";
+import { t, type Language } from "./i18n";
 
 export type SortField =
   | "name"
@@ -58,9 +59,14 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
   const priceUnit = t(getUnitLabelKey(unit), lang);
   const priceDecimals = unit === "KTok" ? 5 : 2;
 
+  // 辅助渲染函数：统一处理价格转换和格式化
+  const renderPrice = (price: number) =>
+    formatCurrency(convertPrice(price, currency, unit), currency, lang, priceDecimals);
+
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
-      <div className="overflow-x-auto">
+      {/* 桌面端表格布局 - md以上显示 */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead className="border-b border-border bg-muted/30 transition-colors">
             <tr>
@@ -139,25 +145,11 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">
-                    {formatCurrency(
-                      convertPrice(model.inputPrice, currency, unit),
-                      currency,
-                      lang,
-                      priceDecimals
-                    )}
-                  </div>
+                  <div className="font-mono">{renderPrice(model.inputPrice)}</div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="font-mono">
-                    {formatCurrency(
-                      convertPrice(model.outputPrice, currency, unit),
-                      currency,
-                      lang,
-                      priceDecimals
-                    )}
-                  </div>
+                  <div className="font-mono">{renderPrice(model.outputPrice)}</div>
                   <div className="text-xs text-muted-foreground">{priceUnit}</div>
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{model.description}</td>
@@ -196,6 +188,69 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 移动端卡片布局 - md以下显示 */}
+      <div className="grid gap-3 p-4 md:hidden">
+        {models.map((model) => (
+          <div
+            key={`${model.id}-card`}
+            className="space-y-3 rounded-xl border border-border bg-background/40 p-4 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="text-base font-semibold leading-tight">{model.name}</div>
+                <div className="text-xs text-muted-foreground">{model.provider}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(model.id)}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+                  model.isFavorite
+                    ? "border-destructive/40 bg-destructive-soft text-destructive"
+                    : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                }`}
+                aria-label={model.isFavorite ? "Remove favorite" : "Add favorite"}
+                aria-pressed={model.isFavorite}
+              >
+                <Heart
+                  className="h-4 w-4"
+                  strokeWidth={model.isFavorite ? 0 : 2}
+                  stroke={model.isFavorite ? "none" : "currentColor"}
+                  fill={model.isFavorite ? "currentColor" : "none"}
+                />
+              </button>
+            </div>
+
+            <p className="text-sm leading-relaxed text-muted-foreground">{model.description}</p>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border border-border bg-card/40 p-3">
+                <div className="text-xs text-muted-foreground">{t("officialInputPrice", lang)}</div>
+                <div className="font-mono text-base">{renderPrice(model.inputPrice)}</div>
+                <div className="text-[11px] text-muted-foreground">{priceUnit}</div>
+              </div>
+              <div className="rounded-lg border border-border bg-card/40 p-3">
+                <div className="text-xs text-muted-foreground">{t("officialOutputPrice", lang)}</div>
+                <div className="font-mono text-base">{renderPrice(model.outputPrice)}</div>
+                <div className="text-[11px] text-muted-foreground">{priceUnit}</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-1">{model.temperatureRange}</span>
+              <span className="rounded-full bg-muted px-2 py-1">
+                {t("defaultTemperature", lang)}: {model.defaultTemperature ?? "-"}
+              </span>
+              {model.isPopular && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-primary">
+                  <Star className="h-3 w-3 fill-primary" />
+                  {t("isPopular", lang)}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
