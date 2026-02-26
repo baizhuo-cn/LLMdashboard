@@ -323,7 +323,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const lastUpdate = new Date('2025-12-30');
+  const lastUpdate = new Date('2026-02-26');
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">
@@ -350,15 +350,15 @@ export default function App() {
 
             <FiltersBar
               providers={providers}
-               provider={provider}
-               onProviderChange={setProvider}
-               search={search}
-               onSearchChange={setSearch}
-               onExport={handleExport}
-               filterMode={filterMode}
-               onFilterModeChange={setFilterMode}
-               lang={lang}
-             />
+              provider={provider}
+              onProviderChange={setProvider}
+              search={search}
+              onSearchChange={setSearch}
+              onExport={handleExport}
+              filterMode={filterMode}
+              onFilterModeChange={setFilterMode}
+              lang={lang}
+            />
 
             <PricingTable
               models={filteredModels}
@@ -444,29 +444,29 @@ export default function App() {
           </div>
         )}
 
-         {activeTab === 'ratings' && (
-           <div className="space-y-4">
-             <div className="rounded-2xl border border-border bg-card p-6">
-               <h2 className="text-xl mb-2">{t('communityRatings', lang)}</h2>
-               <p className="text-sm text-muted-foreground">
-                 {t('communityRatingsDesc', lang)}
-               </p>
-             </div>
+        {activeTab === 'ratings' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <h2 className="text-xl mb-2">{t('communityRatings', lang)}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t('communityRatingsDesc', lang)}
+              </p>
+            </div>
 
-             <div className="space-y-3">
-               {sampleRatings.map((rating) => (
-                 <RatingItem
-                   key={rating.id}
-                   rating={rating}
-                   selected={selectedRating === rating.id}
-                   onSelect={() => setSelectedRating(rating.id === selectedRating ? null : rating.id)}
-                   lang={lang}
-                 />
-               ))}
-             </div>
-           </div>
-         )}
-       </main>
-     </div>
+            <div className="space-y-3">
+              {sampleRatings.map((rating) => (
+                <RatingItem
+                  key={rating.id}
+                  rating={rating}
+                  selected={selectedRating === rating.id}
+                  onSelect={() => setSelectedRating(rating.id === selectedRating ? null : rating.id)}
+                  lang={lang}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
