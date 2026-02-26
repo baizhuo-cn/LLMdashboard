@@ -55,7 +55,7 @@ export function usePricingData(): { models: PricingModel[]; providers: string[] 
   return useMemo(() => {
     const parsed = Papa.parse<PricingCsvRow>(csvRaw, {
       header: true,
-      skipEmptyLines: true,
+      skipEmptyLines: 'greedy',
     });
 
     const models = (parsed.data || [])

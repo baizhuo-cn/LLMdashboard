@@ -39,10 +39,30 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
   const [result, setResult] = useState<{ perCall: number; monthly: number } | null>(null);
   const [savedResults, setSavedResults] = useState<SavedResult[]>([]);
 
-  // Estimate tokens from pasted content (1 token ≈ 4 chars)
+  // Estimate tokens from pasted content
+  // CJK characters: ~1.5 tokens per character
+  // Latin/ASCII characters: ~0.25 tokens per character (4 chars ≈ 1 token)
+  // Whitespace and punctuation: ~0.25 tokens per character
   const estimateTokens = (text: string): number => {
     if (!text) return 0;
-    return Math.ceil(text.length / 4);
+    let tokens = 0;
+    for (const char of text) {
+      const code = char.codePointAt(0) ?? 0;
+      // CJK Unified Ideographs and common CJK ranges
+      if (
+        (code >= 0x4e00 && code <= 0x9fff) ||   // CJK Unified Ideographs
+        (code >= 0x3400 && code <= 0x4dbf) ||   // CJK Extension A
+        (code >= 0x3000 && code <= 0x303f) ||   // CJK Symbols and Punctuation
+        (code >= 0xff00 && code <= 0xffef) ||   // Fullwidth Forms
+        (code >= 0xac00 && code <= 0xd7af) ||   // Korean Hangul
+        (code >= 0x3040 && code <= 0x30ff)      // Japanese Hiragana + Katakana
+      ) {
+        tokens += 1.5;
+      } else {
+        tokens += 0.25;
+      }
+    }
+    return Math.max(1, Math.ceil(tokens));
   };
 
   const computeCosts = () => {
