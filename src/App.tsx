@@ -323,7 +323,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const lastUpdate = new Date('2025-12-30');
+  const lastUpdate = new Date();
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">
@@ -340,7 +340,7 @@ export default function App() {
         onLangChange={setLang}
       />
 
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 md:px-8 lg:px-12 xl:px-[120px]">
+      <main className="mx-auto w-full max-w-[1440px] px-3 py-5 sm:px-6 sm:py-8 md:px-8 lg:px-12 xl:px-[120px]">
         {activeTab === 'dashboard' && (
           <div className="space-y-4">
             <KPIGroup>

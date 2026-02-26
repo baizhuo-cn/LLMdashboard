@@ -29,11 +29,11 @@ export function FiltersBar({
 }: FiltersBarProps) {
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Button
           onClick={() => onFilterModeChange('all')}
           variant={filterMode === 'all' ? 'default' : 'outline'}
-          className="gap-2 border-border"
+          className="w-full gap-2 border-border sm:w-auto"
           size="sm"
         >
           {t('allModels', lang)}
@@ -41,7 +41,7 @@ export function FiltersBar({
         <Button 
           onClick={() => onFilterModeChange('favorites')}
           variant={filterMode === 'favorites' ? 'default' : 'outline'}
-          className="gap-2 border-border"
+          className="w-full gap-2 border-border sm:w-auto"
           size="sm"
         >
           <Heart className="h-4 w-4" />
@@ -50,7 +50,7 @@ export function FiltersBar({
         <Button 
           onClick={() => onFilterModeChange('popular')}
           variant={filterMode === 'popular' ? 'default' : 'outline'}
-          className="gap-2 border-border"
+          className="w-full gap-2 border-border sm:w-auto"
           size="sm"
         >
           <Star className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function FiltersBar({
           />
         </div>
 
-        <Button onClick={onExport} variant="outline" className="gap-2 border-border w-full sm:w-auto">
+        <Button onClick={onExport} variant="outline" className="w-full gap-2 border-border sm:w-auto">
           <Download className="h-4 w-4" />
           {t('export', lang)}
         </Button>
