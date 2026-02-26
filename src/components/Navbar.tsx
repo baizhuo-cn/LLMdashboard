@@ -17,17 +17,17 @@ type NavbarProps = {
   onLangChange: (lang: Language) => void;
 };
 
-export function Navbar({ 
-  activeTab, 
-  onTabChange, 
-  currency, 
-  onCurrencyChange, 
-  unit, 
-  onUnitChange, 
-  theme, 
+export function Navbar({
+  activeTab,
+  onTabChange,
+  currency,
+  onCurrencyChange,
+  unit,
+  onUnitChange,
+  theme,
   onThemeChange,
   lang,
-  onLangChange 
+  onLangChange
 }: NavbarProps) {
   const tabs = [
     { id: 'dashboard', label: t('dashboard', lang) },
@@ -38,54 +38,51 @@ export function Navbar({
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md transition-colors">
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10 xl:px-[120px]">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-primary" />
-          <span className="font-mono text-sm">LLMguide模型导员</span>
-          <Badge variant="outline" className="ml-2 border-muted-foreground/30 text-xs">
-            {t('alpha', lang)}
-          </Badge>
-        </div>
-
-        <div className="flex w-full flex-col gap-4 lg:w-auto">
-          <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
-            <div className="flex flex-wrap items-center gap-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={`rounded-lg px-4 py-2 text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-muted text-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <a
-              href="https://prompt-free.netlify.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full rounded-lg border border-primary/40 px-4 py-2 text-center text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground sm:w-auto"
-            >
-              提示词
-            </a>
+      <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6 lg:px-10 xl:px-[120px]">
+        {/* Row 1: Branding + Tabs */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            <span className="font-mono text-sm font-medium">LLMguide模型导员</span>
+            <Badge variant="outline" className="border-muted-foreground/30 text-xs">
+              {t('alpha', lang)}
+            </Badge>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-between lg:justify-end">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2: Controls */}
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/50 pt-3 sm:justify-end">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             <button
               onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
-              className="flex h-10 w-full items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9 sm:w-9"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             </button>
 
+            <div className="h-4 w-px bg-border hidden sm:block" />
+
             <Select value={lang} onValueChange={onLangChange}>
-              <SelectTrigger className="h-10 w-full border-border sm:h-9 sm:w-[80px]">
+              <SelectTrigger className="h-8 w-[72px] border-border text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +92,7 @@ export function Navbar({
             </Select>
 
             <Select value={currency} onValueChange={(value) => onCurrencyChange(value as SupportedCurrency)}>
-              <SelectTrigger className="h-10 w-full border-border sm:h-9 sm:w-[100px]">
+              <SelectTrigger className="h-8 w-[96px] border-border text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -106,7 +103,7 @@ export function Navbar({
             </Select>
 
             <Select value={unit} onValueChange={(value) => onUnitChange(value as TokenUnit)}>
-              <SelectTrigger className="h-10 w-full border-border sm:h-9 sm:w-[110px]">
+              <SelectTrigger className="h-8 w-[88px] border-border text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -114,6 +111,17 @@ export function Navbar({
                 <SelectItem value="KTok">KTok</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="h-4 w-px bg-border hidden sm:block" />
+
+            <a
+              href="https://prompt-free.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-8 items-center rounded-md border border-primary/40 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            >
+              提示词
+            </a>
           </div>
         </div>
       </div>
