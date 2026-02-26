@@ -1863,6 +1863,21 @@ html {
   font-size: var(--font-size);
 }
 
+/* Hotfix: these utilities are used in components but missing in this prebuilt CSS snapshot. */
+.hidden {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  .md\:block {
+    display: block;
+  }
+
+  .md\:hidden {
+    display: none;
+  }
+}
+
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;
