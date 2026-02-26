@@ -38,7 +38,7 @@ export function Navbar({
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md transition-colors">
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between lg:px-10 xl:px-[120px]">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10 xl:px-[120px]">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-primary" />
           <span className="font-mono text-sm">LLMguide模型导员</span>
@@ -49,12 +49,12 @@ export function Navbar({
 
         <div className="flex w-full flex-col gap-4 lg:w-auto">
           <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
-            <div className="flex w-full items-center gap-1 overflow-x-auto pb-1 lg:w-auto lg:overflow-visible">
+            <div className="flex flex-wrap items-center gap-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
-                  className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors sm:px-4 ${
+                  className={`rounded-lg px-4 py-2 text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'bg-muted text-foreground'
                       : 'text-muted-foreground hover:text-foreground'
