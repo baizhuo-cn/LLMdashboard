@@ -12,6 +12,10 @@ import {
   type SupportedCurrency,
   type TokenUnit,
 } from "../utils/pricing";
+import {
+  estimateTokensHeuristic,
+  estimateTokensWithDeepSeekRule,
+} from "../utils/deepseekTokenizer";
 import { t, formatCurrency, formatNumber, type Language } from "./i18n";
 
 type CalculatorPanelProps = {
@@ -28,7 +32,93 @@ type SavedResult = {
   provider: string;
   perCall: number;
   monthly: number;
+  matchedTierCondition: string | null;
 };
+
+type TierRange = {
+  lowerExclusive: number;
+  upperInclusive: number | null;
+};
+
+function parseTokenBound(value: string, unit: string): number {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return Number.NaN;
+
+  const normalizedUnit = unit.toUpperCase();
+  if (normalizedUnit === "M") return parsed * 1_000_000;
+  if (normalizedUnit === "K") return parsed * 1_000;
+  if (parsed === 0) return 0;
+  return parsed * 1_000;
+}
+
+function parseTierRange(condition: string): TierRange | null {
+  if (!condition) return null;
+  const compact = condition.replace(/\s+/g, "");
+
+  const boundedMatch = compact.match(/^(\d+(?:\.\d+)?)([kKmM]?)<Token≤(\d+(?:\.\d+)?)([kKmM]?)$/i);
+  if (boundedMatch) {
+    const [, lowerValue, lowerUnitRaw, upperValue, upperUnitRaw] = boundedMatch;
+    const lower = parseTokenBound(lowerValue, lowerUnitRaw || "");
+    const upper = parseTokenBound(upperValue, upperUnitRaw || "");
+    if (Number.isFinite(lower) && Number.isFinite(upper)) {
+      return { lowerExclusive: lower, upperInclusive: upper };
+    }
+    return null;
+  }
+
+  const openMatch = compact.match(/^(\d+(?:\.\d+)?)([kKmM]?)<Token$/i);
+  if (openMatch) {
+    const [, lowerValue, lowerUnitRaw] = openMatch;
+    const lower = parseTokenBound(lowerValue, lowerUnitRaw || "");
+    if (Number.isFinite(lower)) {
+      return { lowerExclusive: lower, upperInclusive: null };
+    }
+  }
+
+  return null;
+}
+
+function getApplicableTier(model: PricingModel, inputTokensCount: number): PricingModel["tiers"][number] | null {
+  if (!model.isTieredPricing || model.tiers.length === 0) return null;
+
+  let firstTier: PricingModel["tiers"][number] | null = null;
+  let firstRangeTier: PricingModel["tiers"][number] | null = null;
+  let firstRangeLower = 0;
+  let lastRangeTier: PricingModel["tiers"][number] | null = null;
+
+  for (const tier of model.tiers) {
+    if (!firstTier) firstTier = tier;
+
+    const range = parseTierRange(tier.condition);
+    if (!range) continue;
+    if (!firstRangeTier) {
+      firstRangeTier = tier;
+      firstRangeLower = range.lowerExclusive;
+    }
+    lastRangeTier = tier;
+
+    const inLowerBound = inputTokensCount > range.lowerExclusive;
+    const inUpperBound = range.upperInclusive === null || inputTokensCount <= range.upperInclusive;
+    if (inLowerBound && inUpperBound) {
+      return tier;
+    }
+  }
+
+  if (firstRangeTier && inputTokensCount <= firstRangeLower) {
+    return firstRangeTier;
+  }
+
+  return lastRangeTier ?? firstTier;
+}
+
+function formatPerCallCurrency(amount: number, currency: SupportedCurrency, lang: Language): string {
+  if (amount > 0 && amount < 0.01) {
+    if (currency === "CNY") return "￥<0.01";
+    if (currency === "USD") return "$<0.01";
+    if (currency === "EUR") return "€<0.01";
+  }
+  return formatCurrency(amount, currency, lang);
+}
 
 export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPanelProps) {
   const [selectedModel, setSelectedModel] = useState<string>('');
@@ -36,34 +126,9 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
   const [inputTokens, setInputTokens] = useState<string>('1000');
   const [outputTokens, setOutputTokens] = useState<string>('500');
   const [callsPerMonth, setCallsPerMonth] = useState<string>('1000');
-  const [result, setResult] = useState<{ perCall: number; monthly: number } | null>(null);
+  const [detectedTokens, setDetectedTokens] = useState<number>(0);
+  const [result, setResult] = useState<{ perCall: number; monthly: number; matchedTierCondition: string | null } | null>(null);
   const [savedResults, setSavedResults] = useState<SavedResult[]>([]);
-
-  // Estimate tokens from pasted content
-  // CJK characters: ~1.5 tokens per character
-  // Latin/ASCII characters: ~0.25 tokens per character (4 chars ≈ 1 token)
-  // Whitespace and punctuation: ~0.25 tokens per character
-  const estimateTokens = (text: string): number => {
-    if (!text) return 0;
-    let tokens = 0;
-    for (const char of text) {
-      const code = char.codePointAt(0) ?? 0;
-      // CJK Unified Ideographs and common CJK ranges
-      if (
-        (code >= 0x4e00 && code <= 0x9fff) ||   // CJK Unified Ideographs
-        (code >= 0x3400 && code <= 0x4dbf) ||   // CJK Extension A
-        (code >= 0x3000 && code <= 0x303f) ||   // CJK Symbols and Punctuation
-        (code >= 0xff00 && code <= 0xffef) ||   // Fullwidth Forms
-        (code >= 0xac00 && code <= 0xd7af) ||   // Korean Hangul
-        (code >= 0x3040 && code <= 0x30ff)      // Japanese Hiragana + Katakana
-      ) {
-        tokens += 1.5;
-      } else {
-        tokens += 0.25;
-      }
-    }
-    return Math.max(1, Math.ceil(tokens));
-  };
 
   const computeCosts = () => {
     const model = models.find((m) => m.id === selectedModel);
@@ -74,15 +139,23 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
     const calls = parseFloat(callsPerMonth) || 0;
     const divisor = getTokenDivisor(unit);
 
-    const inputPrice = convertPrice(model.inputPrice, currency, unit);
-    const outputPrice = convertPrice(model.outputPrice, currency, unit);
+    const matchedTier = getApplicableTier(model, input);
+    const rawInputPrice = matchedTier?.inputPrice ?? model.inputPrice;
+    const rawOutputPrice = matchedTier?.outputPrice ?? model.outputPrice;
+
+    const inputPrice = convertPrice(rawInputPrice, currency, unit);
+    const outputPrice = convertPrice(rawOutputPrice, currency, unit);
 
     const inputCost = (input / divisor) * inputPrice;
     const outputCost = (output / divisor) * outputPrice;
     const perCallCost = inputCost + outputCost;
     const monthlyCost = perCallCost * calls;
 
-    return { perCall: perCallCost, monthly: monthlyCost };
+    return {
+      perCall: perCallCost,
+      monthly: monthlyCost,
+      matchedTierCondition: matchedTier?.condition?.trim() ? matchedTier.condition : null,
+    };
   };
 
   const handleCalculate = () => {
@@ -95,6 +168,34 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
     const costs = computeCosts();
     setResult(costs);
   }, [currency, unit]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const content = pastedContent;
+
+    if (!content) {
+      setDetectedTokens(0);
+      return undefined;
+    }
+
+    const detect = async () => {
+      try {
+        const count = await estimateTokensWithDeepSeekRule(content);
+        if (!cancelled) {
+          setDetectedTokens(count);
+        }
+      } catch {
+        if (!cancelled) {
+          setDetectedTokens(estimateTokensHeuristic(content));
+        }
+      }
+    };
+
+    detect();
+    return () => {
+      cancelled = true;
+    };
+  }, [pastedContent]);
 
   const handleSaveResult = () => {
     if (!result || !selectedModel) return;
@@ -111,6 +212,7 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
         provider: model.provider,
         perCall: result.perCall,
         monthly: result.monthly,
+        matchedTierCondition: result.matchedTierCondition,
       },
     ]);
   };
@@ -169,7 +271,7 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
           />
           {pastedContent && (
             <p className="text-xs text-muted-foreground">
-              {t('tokensDetected', lang, { count: formatNumber(estimateTokens(pastedContent), lang) })}
+              {t('tokensDetected', lang, { count: formatNumber(detectedTokens, lang) })}
             </p>
           )}
         </div>
@@ -230,13 +332,18 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
           <div className="mt-6 space-y-3">
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
               <p className="text-sm text-muted-foreground mb-1">{t('perCallCost', lang)}</p>
-              <p className="text-2xl">{formatCurrency(result.perCall, currency, lang)}</p>
+              <p className="text-2xl">{formatPerCallCurrency(result.perCall, currency, lang)}</p>
               <p className="text-xs text-muted-foreground mt-2">
                 {t('basedOnTokens', lang, {
                   input: formatNumber(parseFloat(inputTokens) || 0, lang),
                   output: formatNumber(parseFloat(outputTokens) || 0, lang),
                 })}
               </p>
+              {result.matchedTierCondition && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('matchedTier', lang)}: {result.matchedTierCondition}
+                </p>
+              )}
             </div>
 
             <div className="p-4 rounded-lg bg-accent/10 border border-accent/30">
@@ -291,10 +398,15 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
                 <div className="flex-1">
                   <p className="text-sm font-medium">{item.modelName}</p>
                   <p className="text-xs text-muted-foreground">{item.provider}</p>
+                  {item.matchedTierCondition && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t('matchedTier', lang)}: {item.matchedTierCondition}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-mono">
-                    {formatCurrency(item.perCall, currency, lang)}
+                    {formatPerCallCurrency(item.perCall, currency, lang)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {t('monthlyEstimate', lang)}: {formatCurrency(item.monthly, currency, lang)}
@@ -318,7 +430,7 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span>{t('totalPerCallCost', lang)}</span>
-                <span className="font-mono">{formatCurrency(totalPerCall, currency, lang)}</span>
+                <span className="font-mono">{formatPerCallCurrency(totalPerCall, currency, lang)}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span>{t('totalMonthlyCost', lang)}</span>

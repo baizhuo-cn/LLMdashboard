@@ -1878,6 +1878,83 @@ html {
   }
 }
 
+/* Navbar style override: avoid relying on missing precompiled utility variants */
+.navbar-shell {
+  background: #fff;
+}
+
+.dark .navbar-shell {
+  background: var(--card);
+}
+
+.navbar-container {
+  min-height: 64px;
+}
+
+.navbar-brand-text {
+  letter-spacing: 0.01em;
+}
+
+.navbar-tab-btn {
+  border: 1px solid transparent;
+  border-radius: 0.8rem;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.navbar-tab-active {
+  border-color: var(--border);
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.navbar-control {
+  height: 2.55rem;
+  border-radius: 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 400;
+  background: var(--card);
+}
+
+.navbar-control-btn {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 9999px;
+}
+
+.navbar-link {
+  padding-inline: 0.9rem;
+  color: var(--muted-foreground);
+}
+
+.navbar-link:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+@media (min-width: 760px) {
+  .navbar-layout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .navbar-tabs-wrap {
+    justify-content: center;
+  }
+
+  .navbar-controls-wrap {
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 0;
+    padding-top: 0;
+    overflow: visible;
+  }
+}
+
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

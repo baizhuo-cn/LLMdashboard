@@ -119,7 +119,7 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                       <button
                         type="button"
                         onClick={() => onToggleFavorite(model.id)}
-                        className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                        className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
                           model.isFavorite
                             ? "bg-destructive-soft text-destructive"
                             : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"

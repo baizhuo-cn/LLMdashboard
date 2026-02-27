@@ -37,43 +37,36 @@ export function Navbar({
   ];
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md transition-colors">
-      <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6 lg:px-10 xl:px-[120px]">
-        {/* Row 1: Branding + Tabs */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 shrink-0">
+    <nav className="navbar-shell sticky top-0 z-50 border-b border-border transition-colors">
+      <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-10 xl:px-[120px]">
+        <div className="navbar-layout navbar-container flex flex-col gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="font-mono text-sm font-medium">LLMguide模型导员</span>
+            <span className="navbar-brand-text font-mono text-sm font-normal">LLMguide模型导员</span>
             <Badge variant="outline" className="border-muted-foreground/30 text-xs">
               {t('alpha', lang)}
             </Badge>
           </div>
 
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          <div className="navbar-tabs-wrap flex min-w-0 items-center justify-start gap-2 overflow-x-auto scrollbar-none">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`relative whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                    ? 'bg-primary/10 text-primary'
+                className={`navbar-tab-btn relative whitespace-nowrap transition-all duration-200 ${activeTab === tab.id
+                    ? 'navbar-tab-active'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
               >
                 {tab.label}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary" />
-                )}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Row 2: Controls */}
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/50 pt-3 sm:justify-end">
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div className="navbar-controls-wrap flex items-center justify-start gap-2 overflow-x-auto border-t border-border/50 pt-3 scrollbar-none">
             <button
               onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="navbar-control-btn flex items-center justify-center border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Toggle theme"
             >
               {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
@@ -82,7 +75,7 @@ export function Navbar({
             <div className="h-4 w-px bg-border hidden sm:block" />
 
             <Select value={lang} onValueChange={onLangChange}>
-              <SelectTrigger className="h-8 w-[72px] border-border text-xs">
+              <SelectTrigger className="navbar-control w-[84px] border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -92,7 +85,7 @@ export function Navbar({
             </Select>
 
             <Select value={currency} onValueChange={(value) => onCurrencyChange(value as SupportedCurrency)}>
-              <SelectTrigger className="h-8 w-[96px] border-border text-xs">
+              <SelectTrigger className="navbar-control w-[110px] border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -103,7 +96,7 @@ export function Navbar({
             </Select>
 
             <Select value={unit} onValueChange={(value) => onUnitChange(value as TokenUnit)}>
-              <SelectTrigger className="h-8 w-[88px] border-border text-xs">
+              <SelectTrigger className="navbar-control w-[96px] border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -118,7 +111,7 @@ export function Navbar({
               href="https://prompt-free.netlify.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-8 items-center rounded-md border border-primary/40 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+              className="navbar-control navbar-link inline-flex items-center border border-border text-sm font-normal transition-colors"
             >
               提示词
             </a>
