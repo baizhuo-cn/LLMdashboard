@@ -12,6 +12,7 @@ import type { PricingModel } from './data/types';
 import { ModelCompareSelect } from './components/ModelCompareSelect';
 import { Button } from './components/ui/button';
 import { Plus } from 'lucide-react';
+import { type SupportedCurrency, type TokenUnit } from './utils/pricing';
 
 const sampleRatings: Rating[] = [
   {
@@ -70,22 +71,14 @@ const sampleRatings: Rating[] = [
   },
 ];
 
-const getSortValue = (model: PricingModel, field: SortField): string | number | null => {
+const getSortValue = (model: PricingModel, field: SortField): number => {
   switch (field) {
-    case 'name':
-      return model.name;
     case 'inputPrice':
       return model.inputPrice;
     case 'outputPrice':
       return model.outputPrice;
-    case 'description':
-      return model.description;
-    case 'temperatureRange':
-      return model.temperatureRange;
-    case 'defaultTemperature':
-      return model.defaultTemperature;
     default:
-      return null;
+      return 0;
   }
 };
 
@@ -104,7 +97,9 @@ export default function App() {
   const [selectedRating, setSelectedRating] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lang, setLang] = useState<Language>('zh');
-  const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'popular'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'favorites'>('all');
+  const [tieredFilter, setTieredFilter] = useState<'all' | 'yes' | 'no'>('all');
+  const [tierConditionFilter, setTierConditionFilter] = useState('');
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const favoritesInitialized = useRef(false);
   const [compareSlots, setCompareSlots] = useState<string[]>(() => Array.from({ length: MIN_COMPARE_SLOTS }, () => ''));
@@ -201,18 +196,27 @@ export default function App() {
 
     if (filterMode === 'favorites') {
       filtered = filtered.filter((m) => m.isFavorite);
-    } else if (filterMode === 'popular') {
-      filtered = filtered.filter((m) => m.isPopular);
     }
 
     if (provider !== 'all') {
       filtered = filtered.filter((m) => m.provider === provider);
     }
 
+    if (tieredFilter === 'yes') {
+      filtered = filtered.filter((m) => m.isTieredPricing);
+    } else if (tieredFilter === 'no') {
+      filtered = filtered.filter((m) => !m.isTieredPricing);
+    }
+
+    if (tierConditionFilter.trim()) {
+      const keyword = tierConditionFilter.toLowerCase().trim();
+      filtered = filtered.filter((m) => m.tierCondition.toLowerCase().includes(keyword));
+    }
+
     if (search) {
       const keyword = search.toLowerCase();
       filtered = filtered.filter((m) => {
-        const fields = [m.name, m.provider, m.description, m.temperatureRange];
+        const fields = [m.name, m.provider, m.tierCondition];
         return fields.some((field) => field.toLowerCase().includes(keyword));
       });
     }
@@ -220,23 +224,8 @@ export default function App() {
     if (sortField && sortDirection) {
       const direction = sortDirection === 'asc' ? 1 : -1;
       filtered.sort((a, b) => {
-        if (sortField === 'defaultTemperature') {
-          const aTemp = a.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
-          const bTemp = b.defaultTemperature ?? (sortDirection === 'asc' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY);
-          if (aTemp < bTemp) return -1 * direction;
-          if (aTemp > bTemp) return 1 * direction;
-          return 0;
-        }
-
-        const aVal = getSortValue(a, sortField);
-        const bVal = getSortValue(b, sortField);
-
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return direction * aVal.localeCompare(bVal, lang === 'zh' ? 'zh-CN' : 'en-US');
-        }
-
-        const aNum = typeof aVal === 'number' ? aVal : 0;
-        const bNum = typeof bVal === 'number' ? bVal : 0;
+        const aNum = getSortValue(a, sortField);
+        const bNum = getSortValue(b, sortField);
 
         if (aNum < bNum) return -1 * direction;
         if (aNum > bNum) return 1 * direction;
@@ -245,7 +234,7 @@ export default function App() {
     }
 
     return filtered;
-  }, [displayModels, filterMode, provider, search, sortField, sortDirection, lang]);
+  }, [displayModels, filterMode, provider, tieredFilter, tierConditionFilter, search, sortField, sortDirection]);
 
   const toggleFavorite = (modelId: string) => {
     setFavoriteIds((prev) =>
@@ -289,16 +278,14 @@ export default function App() {
     const noLabel = t('no', lang);
 
     const rows = [
-      ['厂商', '模型名称', '官方输入价格', '官方输出价格', '模型说明', '温度范围', '默认温度', '常用模型', '收藏'],
+      ['厂商', '模型名称', '是否阶梯计费', '阶梯计费条件', '输入', '输出', '收藏'],
       ...filteredModels.map((model) => [
         model.provider,
         model.name,
+        model.isTieredPricing ? yesLabel : noLabel,
+        model.tierCondition,
         formatCurrency(model.inputPrice, currency, lang),
         formatCurrency(model.outputPrice, currency, lang),
-        model.description,
-        model.temperatureRange,
-        model.defaultTemperature ?? '',
-        model.isPopular ? yesLabel : noLabel,
         model.isFavorite ? yesLabel : noLabel,
       ]),
     ];
@@ -352,6 +339,10 @@ export default function App() {
               providers={providers}
               provider={provider}
               onProviderChange={setProvider}
+              tieredFilter={tieredFilter}
+              onTieredFilterChange={setTieredFilter}
+              tierConditionFilter={tierConditionFilter}
+              onTierConditionFilterChange={setTierConditionFilter}
               search={search}
               onSearchChange={setSearch}
               onExport={handleExport}

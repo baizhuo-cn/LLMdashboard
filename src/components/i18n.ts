@@ -16,6 +16,11 @@ export const translations = {
     // Filters
     allProviders: '所有供应商',
     searchPlaceholder: '搜索模型、供应商或标签...',
+    tieredFilter: '阶梯计费筛选',
+    tieredAll: '全部计费类型',
+    tieredOnly: '仅阶梯计费',
+    nonTieredOnly: '仅非阶梯计费',
+    tierConditionPlaceholder: '筛选阶梯条件，例如 0<Token≤128K',
     export: '导出',
     showFavorites: '显示收藏',
     showPopular: '显示常用',
@@ -23,6 +28,8 @@ export const translations = {
     
     // Table Headers
     modelName: '模型名称',
+    tieredPricing: '是否阶梯计费',
+    tierCondition: '阶梯计费条件',
     officialInputPrice: '官方输入价格',
     officialOutputPrice: '官方输出价格',
     description: '模型说明',
@@ -105,6 +112,11 @@ export const translations = {
     // Filters
     allProviders: 'All Providers',
     searchPlaceholder: 'Search models, providers, or tags...',
+    tieredFilter: 'Tiered Filter',
+    tieredAll: 'All Billing Types',
+    tieredOnly: 'Tiered Only',
+    nonTieredOnly: 'Non-tiered Only',
+    tierConditionPlaceholder: 'Filter tier condition, e.g. 0<Token≤128K',
     export: 'Export',
     showFavorites: 'Show Favorites',
     showPopular: 'Show Popular',
@@ -112,6 +124,8 @@ export const translations = {
     
     // Table Headers
     modelName: 'Model Name',
+    tieredPricing: 'Tiered Billing',
+    tierCondition: 'Tier Condition',
     officialInputPrice: 'Official Input Price',
     officialOutputPrice: 'Official Output Price',
     description: 'Description',

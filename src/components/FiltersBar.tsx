@@ -1,18 +1,22 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Search, Download, Heart, Star } from "lucide-react";
+import { Search, Download, Heart } from "lucide-react";
 import { t, type Language } from "./i18n";
 
 type FiltersBarProps = {
   providers: string[];
   provider: string;
   onProviderChange: (provider: string) => void;
+  tieredFilter: 'all' | 'yes' | 'no';
+  onTieredFilterChange: (filter: 'all' | 'yes' | 'no') => void;
+  tierConditionFilter: string;
+  onTierConditionFilterChange: (value: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
   onExport: () => void;
-  filterMode: 'all' | 'favorites' | 'popular';
-  onFilterModeChange: (mode: 'all' | 'favorites' | 'popular') => void;
+  filterMode: 'all' | 'favorites';
+  onFilterModeChange: (mode: 'all' | 'favorites') => void;
   lang: Language;
 };
 
@@ -20,6 +24,10 @@ export function FiltersBar({
   providers,
   provider,
   onProviderChange,
+  tieredFilter,
+  onTieredFilterChange,
+  tierConditionFilter,
+  onTierConditionFilterChange,
   search,
   onSearchChange, 
   onExport, 
@@ -47,15 +55,6 @@ export function FiltersBar({
           <Heart className="h-4 w-4" />
           {t('showFavorites', lang)}
         </Button>
-        <Button 
-          onClick={() => onFilterModeChange('popular')}
-          variant={filterMode === 'popular' ? 'default' : 'outline'}
-          className="gap-2 border-border"
-          size="sm"
-        >
-          <Star className="h-4 w-4" />
-          {t('showPopular', lang)}
-        </Button>
       </div>
       
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 transition-colors sm:flex-row sm:flex-wrap sm:items-center">
@@ -72,6 +71,24 @@ export function FiltersBar({
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={tieredFilter} onValueChange={(value) => onTieredFilterChange(value as 'all' | 'yes' | 'no')}>
+          <SelectTrigger className="w-full border-border sm:w-[180px]">
+            <SelectValue placeholder={t('tieredFilter', lang)} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('tieredAll', lang)}</SelectItem>
+            <SelectItem value="yes">{t('tieredOnly', lang)}</SelectItem>
+            <SelectItem value="no">{t('nonTieredOnly', lang)}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          placeholder={t('tierConditionPlaceholder', lang)}
+          value={tierConditionFilter}
+          onChange={(e) => onTierConditionFilterChange(e.target.value)}
+          className="w-full border-border sm:w-[240px]"
+        />
 
         <div className="relative w-full flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

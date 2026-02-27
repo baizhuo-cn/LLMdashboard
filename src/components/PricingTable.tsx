@@ -1,4 +1,4 @@
-import { ArrowUpDown, ArrowUp, ArrowDown, Star, Heart } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Heart } from "lucide-react";
 import type { PricingModel } from "../data/types";
 import {
   convertPrice,
@@ -9,12 +9,8 @@ import {
 import { t, formatCurrency, type Language } from "./i18n";
 
 export type SortField =
-  | "name"
   | "inputPrice"
-  | "outputPrice"
-  | "description"
-  | "temperatureRange"
-  | "defaultTemperature";
+  | "outputPrice";
 export type SortDirection = "asc" | "desc" | null;
 
 type PricingTableProps = {
@@ -28,168 +24,125 @@ type PricingTableProps = {
   lang: Language;
 };
 
-const getSortableValue = (model: PricingModel, field: SortField): string | number => {
-  switch (field) {
-    case "name":
-      return model.name;
-    case "inputPrice":
-      return model.inputPrice;
-    case "outputPrice":
-      return model.outputPrice;
-    case "description":
-      return model.description;
-    case "temperatureRange":
-      return model.temperatureRange;
-    case "defaultTemperature":
-      return model.defaultTemperature ?? Number.NEGATIVE_INFINITY;
-    default:
-      return "";
-  }
-};
-
 export function PricingTable({ models, sortField, sortDirection, onSort, currency, unit, onToggleFavorite, lang }: PricingTableProps) {
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
-    if (sortDirection === "desc") return <ArrowDown className="h-3 w-3 ml-1" />;
-    return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
+    if (sortDirection === "asc") return <ArrowUp className="ml-1 h-3 w-3" />;
+    if (sortDirection === "desc") return <ArrowDown className="ml-1 h-3 w-3" />;
+    return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
   };
 
   const priceUnit = t(getUnitLabelKey(unit), lang);
   const priceDecimals = unit === "KTok" ? 5 : 2;
 
-  // 辅助渲染函数：统一处理价格转换和格式化
   const renderPrice = (price: number) =>
     formatCurrency(convertPrice(price, currency, unit), currency, lang, priceDecimals);
 
+  const renderTiered = (model: PricingModel) =>
+    model.isTieredPricing ? t("yes", lang) : t("no", lang);
+
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden transition-colors">
-      {/* 桌面端表格布局 - md以上显示 */}
+    <div className="overflow-hidden rounded-2xl border border-border bg-card transition-colors">
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead className="border-b border-border bg-muted/30 transition-colors">
             <tr>
-              <th className="px-6 py-4 text-left w-[200px]">
-                <button
-                  onClick={() => onSort("name")}
-                  className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t("modelName", lang)}
-                  <SortIcon field="name" />
-                </button>
+              <th className="w-[220px] px-6 py-4 text-left">
+                <span className="text-sm text-muted-foreground">{t("modelName", lang)}</span>
               </th>
-              <th className="px-6 py-4 text-right w-[160px]">
+              <th className="w-[130px] px-6 py-4 text-center">
+                <span className="text-sm text-muted-foreground">{t("tieredPricing", lang)}</span>
+              </th>
+              <th className="min-w-[250px] px-6 py-4 text-left">
+                <span className="text-sm text-muted-foreground">{t("tierCondition", lang)}</span>
+              </th>
+              <th className="w-[150px] px-6 py-4 text-right">
                 <button
                   onClick={() => onSort("inputPrice")}
-                  className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
+                  className="ml-auto flex items-center justify-end text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t("officialInputPrice", lang)}
                   <SortIcon field="inputPrice" />
                 </button>
               </th>
-              <th className="px-6 py-4 text-right w-[160px]">
+              <th className="w-[150px] px-6 py-4 text-right">
                 <button
                   onClick={() => onSort("outputPrice")}
-                  className="flex items-center justify-end text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
+                  className="ml-auto flex items-center justify-end text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t("officialOutputPrice", lang)}
                   <SortIcon field="outputPrice" />
                 </button>
               </th>
-              <th className="px-6 py-4 text-left min-w-[250px]">
-                <button
-                  onClick={() => onSort("description")}
-                  className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {t("description", lang)}
-                  <SortIcon field="description" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-center w-[120px]">
-                <button
-                  onClick={() => onSort("temperatureRange")}
-                  className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
-                >
-                  {t("temperatureRange", lang)}
-                  <SortIcon field="temperatureRange" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-center w-[110px]">
-                <button
-                  onClick={() => onSort("defaultTemperature")}
-                  className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
-                >
-                  {t("defaultTemperature", lang)}
-                  <SortIcon field="defaultTemperature" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-center w-[100px]">
-                <span className="text-sm text-muted-foreground">{t("isPopular", lang)}</span>
-              </th>
-              <th className="px-6 py-4 text-center w-[80px]">
+              <th className="w-[80px] px-6 py-4 text-center">
                 <span className="text-sm text-muted-foreground">{t("isFavorite", lang)}</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            {models.map((model) => (
-              <tr
-                key={model.id}
-                className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-              >
-                <td className="px-6 py-4">
-                  <div>
-                    <div>{model.name}</div>
-                    <div className="text-xs text-muted-foreground">{model.provider}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{renderPrice(model.inputPrice)}</div>
-                  <div className="text-xs text-muted-foreground">{priceUnit}</div>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="font-mono">{renderPrice(model.outputPrice)}</div>
-                  <div className="text-xs text-muted-foreground">{priceUnit}</div>
-                </td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">{model.description}</td>
-                <td className="px-6 py-4 text-center text-sm">{model.temperatureRange}</td>
-                <td className="px-6 py-4 text-center text-sm font-mono">
-                  {model.defaultTemperature ?? "-"}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {model.isPopular ? (
-                    <Star className="h-4 w-4 mx-auto fill-primary text-primary" />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
+            {models.flatMap((model) => {
+              const tiers = model.tiers.length
+                ? model.tiers
+                : [{ condition: "", inputPrice: model.inputPrice, outputPrice: model.outputPrice }];
+
+              return tiers.map((tier, index) => (
+                <tr
+                  key={`${model.id}-${index}`}
+                  className="border-b border-border transition-colors hover:bg-muted/20"
+                >
+                  {index === 0 && (
+                    <td rowSpan={tiers.length} className="px-6 py-4 align-top">
+                      <div>
+                        <div>{model.name}</div>
+                        <div className="text-xs text-muted-foreground">{model.provider}</div>
+                      </div>
+                    </td>
                   )}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button
-                    type="button"
-                    onClick={() => onToggleFavorite(model.id)}
-                    className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
-                      model.isFavorite
-                        ? "bg-destructive-soft text-destructive"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    }`}
-                    aria-label={model.isFavorite ? 'Remove favorite' : 'Add favorite'}
-                    aria-pressed={model.isFavorite}
-                  >
-                    <Heart
-                      className="h-4 w-4 transition-colors"
-                      strokeWidth={model.isFavorite ? 0 : 2}
-                      stroke={model.isFavorite ? "none" : "currentColor"}
-                      fill={model.isFavorite ? "currentColor" : "none"}
-                    />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  {index === 0 && (
+                    <td rowSpan={tiers.length} className="px-6 py-4 text-center text-sm align-top">
+                      {renderTiered(model)}
+                    </td>
+                  )}
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
+                    {tier.condition || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="font-mono">{renderPrice(tier.inputPrice)}</div>
+                    <div className="text-xs text-muted-foreground">{priceUnit}</div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="font-mono">{renderPrice(tier.outputPrice)}</div>
+                    <div className="text-xs text-muted-foreground">{priceUnit}</div>
+                  </td>
+                  {index === 0 && (
+                    <td rowSpan={tiers.length} className="px-6 py-4 text-center align-top">
+                      <button
+                        type="button"
+                        onClick={() => onToggleFavorite(model.id)}
+                        className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                          model.isFavorite
+                            ? "bg-destructive-soft text-destructive"
+                            : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                        }`}
+                        aria-label={model.isFavorite ? "Remove favorite" : "Add favorite"}
+                        aria-pressed={model.isFavorite}
+                      >
+                        <Heart
+                          className="h-4 w-4 transition-colors"
+                          strokeWidth={model.isFavorite ? 0 : 2}
+                          stroke={model.isFavorite ? "none" : "currentColor"}
+                          fill={model.isFavorite ? "currentColor" : "none"}
+                        />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ));
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* 移动端卡片布局 - md以下显示 */}
       <div className="grid gap-3 p-4 md:hidden">
         {models.map((model) => (
           <div
@@ -221,32 +174,28 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
               </button>
             </div>
 
-            <p className="text-sm leading-relaxed text-muted-foreground">{model.description}</p>
-
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border border-border bg-card/40 p-3">
-                <div className="text-xs text-muted-foreground">{t("officialInputPrice", lang)}</div>
-                <div className="font-mono text-base">{renderPrice(model.inputPrice)}</div>
-                <div className="text-[11px] text-muted-foreground">{priceUnit}</div>
-              </div>
-              <div className="rounded-lg border border-border bg-card/40 p-3">
-                <div className="text-xs text-muted-foreground">{t("officialOutputPrice", lang)}</div>
-                <div className="font-mono text-base">{renderPrice(model.outputPrice)}</div>
-                <div className="text-[11px] text-muted-foreground">{priceUnit}</div>
-              </div>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-1">
+                {t("tieredPricing", lang)}: {renderTiered(model)}
+              </span>
             </div>
 
-            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="rounded-full bg-muted px-2 py-1">{model.temperatureRange}</span>
-              <span className="rounded-full bg-muted px-2 py-1">
-                {t("defaultTemperature", lang)}: {model.defaultTemperature ?? "-"}
-              </span>
-              {model.isPopular && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-primary">
-                  <Star className="h-3 w-3 fill-primary" />
-                  {t("isPopular", lang)}
-                </span>
-              )}
+            <div className="overflow-hidden rounded-lg border border-border">
+              {(model.tiers.length
+                ? model.tiers
+                : [{ condition: "", inputPrice: model.inputPrice, outputPrice: model.outputPrice }]
+              ).map((tier, index) => (
+                <div
+                  key={`${model.id}-tier-${index}`}
+                  className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 p-3 text-xs ${
+                    index > 0 ? "border-t border-border" : ""
+                  }`}
+                >
+                  <div className="text-muted-foreground break-all">{tier.condition || "-"}</div>
+                  <div className="font-mono">{renderPrice(tier.inputPrice)}</div>
+                  <div className="font-mono">{renderPrice(tier.outputPrice)}</div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
