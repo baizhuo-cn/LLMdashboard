@@ -458,6 +458,10 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <div className="pointer-events-none fixed bottom-4 right-4 text-xs text-muted-foreground/55">
+        developed by 白濯
+      </div>
     </div>
   );
 }
