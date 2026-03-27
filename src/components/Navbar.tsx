@@ -105,16 +105,6 @@ export function Navbar({
               </SelectContent>
             </Select>
 
-            <div className="h-4 w-px bg-border hidden sm:block" />
-
-            <a
-              href="https://prompt-free.netlify.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="navbar-control navbar-link inline-flex items-center border border-border text-sm font-normal transition-colors"
-            >
-              提示词
-            </a>
           </div>
         </div>
       </div>
