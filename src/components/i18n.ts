@@ -11,7 +11,10 @@ export const translations = {
     
     // Dashboard KPIs
     totalModels: '模型总数',
+    cheapestInput: '最低输入价',
+    cheapestOutput: '最低输出价',
     lastUpdate: '最后更新',
+    fromProviders: '来自 {{count}} 家供应商',
     
     // Filters
     allProviders: '所有供应商',
@@ -51,6 +54,12 @@ export const translations = {
     removeSlot: '移除此项',
     inputPriceComparison: '输入价格对比',
     outputPriceComparison: '输出价格对比',
+    searchAndAddModel: '搜索并添加模型...',
+    maxCompareHint: '最多可选择 {{max}} 个模型进行对比',
+    detailComparison: '详细对比',
+    ratio: '输出/输入比',
+    supplier: '供应商',
+    showingModels: '显示 {{count}} 个模型',
 
     // Calculator
     singleRequestCalculator: 'Token 计算器',
@@ -108,7 +117,10 @@ export const translations = {
     
     // Dashboard KPIs
     totalModels: 'Total Models',
+    cheapestInput: 'Cheapest Input',
+    cheapestOutput: 'Cheapest Output',
     lastUpdate: 'Last Update',
+    fromProviders: 'from {{count}} providers',
     
     // Filters
     allProviders: 'All Providers',
@@ -148,6 +160,12 @@ export const translations = {
     removeSlot: 'Remove slot',
     inputPriceComparison: 'Input Price Comparison',
     outputPriceComparison: 'Output Price Comparison',
+    searchAndAddModel: 'Search and add models...',
+    maxCompareHint: 'Select up to {{max}} models to compare',
+    detailComparison: 'Detailed Comparison',
+    ratio: 'Output/Input Ratio',
+    supplier: 'Provider',
+    showingModels: 'Showing {{count}} models',
     
     // Calculator
     singleRequestCalculator: 'Token Calculator',

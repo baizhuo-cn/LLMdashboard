@@ -1,20 +1,38 @@
 type KPIChipProps = {
   label: string;
   value: string | number;
-  variant?: 'default' | 'accent' | 'warn';
+  subtitle?: string;
 };
 
-export function KPIChip({ label, value, variant = 'default' }: KPIChipProps) {
-  const variantStyles = {
-    default: 'border-border bg-card',
-    accent: 'border-accent/30 bg-accent/5',
-    warn: 'border-[var(--color-brand-warn)]/30 bg-[var(--color-brand-warn)]/5',
-  };
-
+export function KPIChip({ label, value, subtitle }: KPIChipProps) {
   return (
-    <div className={`flex flex-col gap-1 rounded-2xl border ${variantStyles[variant]} px-6 py-4 transition-colors`}>
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-xl">{value}</span>
+    <div
+      style={{
+        background: 'var(--card)',
+        borderRadius: 14,
+        padding: '20px 22px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        cursor: 'default',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <div style={{ fontSize: 11, color: 'var(--muted-foreground)', marginBottom: 10, letterSpacing: '0.04em', fontWeight: 500 }}>
+        {label}
+      </div>
+      <div className="font-mono-jet" style={{ fontSize: 24, fontWeight: 600, color: 'var(--foreground)', letterSpacing: '-0.03em' }}>
+        {value}
+      </div>
+      {subtitle && (
+        <div style={{ fontSize: 11, color: '#C4C4C4', marginTop: 6 }}>{subtitle}</div>
+      )}
     </div>
   );
 }
@@ -24,5 +42,9 @@ type KPIGroupProps = {
 };
 
 export function KPIGroup({ children }: KPIGroupProps) {
-  return <div className="flex flex-wrap gap-2">{children}</div>;
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ marginBottom: 20 }}>
+      {children}
+    </div>
+  );
 }

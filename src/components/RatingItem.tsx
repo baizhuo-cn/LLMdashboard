@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { t, type Language } from "./i18n";
+import { getProviderColor } from "../utils/providerColors";
 
 export type Rating = {
   id: string;
@@ -24,45 +25,73 @@ export function RatingItem({ rating, selected = false, onSelect, lang }: RatingI
   return (
     <button
       onClick={onSelect}
-      className={`w-full rounded-2xl border transition-all text-left ${
-        selected
-          ? 'border-primary bg-primary/5'
-          : 'border-border bg-card hover:border-muted-foreground/50'
-      }`}
+      style={{
+        width: '100%',
+        textAlign: 'left' as const,
+        background: selected ? 'color-mix(in srgb, var(--color-brand-primary) 5%, var(--card))' : 'var(--card)',
+        borderRadius: 14,
+        border: selected ? '1.5px solid var(--color-brand-primary)' : '1px solid var(--border)',
+        padding: 20,
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+        fontFamily: 'inherit',
+      }}
+      onMouseEnter={(e) => {
+        if (!selected) e.currentTarget.style.borderColor = 'var(--muted-foreground)';
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = selected ? 'var(--color-brand-primary)' : 'var(--border)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      <div className="p-6 flex items-start justify-between gap-6">
-        <div className="flex gap-4 flex-1">
-          <div className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-muted shrink-0">
-            <span className="text-xs font-mono">{rating.provider.substring(0, 2).toUpperCase()}</span>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 12, flex: 1 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: 'var(--muted)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <span className="font-mono-jet" style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted-foreground)' }}>
+              {rating.provider.substring(0, 2).toUpperCase()}
+            </span>
           </div>
-          <div className="flex-1">
-            <h4 className="mb-1">{rating.name}</h4>
-            <p className="text-sm" style={{ color: 'var(--color-brand-warn)' }}>"{rating.quote}"</p>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <div className="provider-dot" style={{ background: getProviderColor(rating.provider) }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--foreground)', letterSpacing: '-0.02em' }}>{rating.name}</span>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--muted-foreground)', lineHeight: 1.5 }}>"{rating.quote}"</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="flex gap-0.5">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 2 }}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
-                className={`h-4 w-4 ${
-                  i < stars ? 'text-muted-foreground' : 'fill-none text-muted-foreground'
-                }`}
-                style={i < stars ? { fill: 'var(--color-brand-warn)', color: 'var(--color-brand-warn)' } : undefined}
+                style={{
+                  width: 14, height: 14,
+                  fill: i < stars ? '#F59E0B' : 'none',
+                  color: i < stars ? '#F59E0B' : 'var(--muted-foreground)',
+                  opacity: i < stars ? 1 : 0.3,
+                }}
               />
             ))}
           </div>
-          <div className="text-right">
-            <p className="text-sm">
-              {rating.score}/{rating.maxScore}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {rating.votes.toLocaleString()} {t('votes', lang)}
-            </p>
+          <div style={{ textAlign: 'right' }}>
+            <span className="font-mono-jet" style={{ fontSize: 16, fontWeight: 600, color: 'var(--foreground)' }}>
+              {rating.score}
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>/{rating.maxScore}</span>
           </div>
+          <span style={{ fontSize: 10, color: 'var(--muted-foreground)', letterSpacing: '0.02em' }}>
+            {rating.votes.toLocaleString()} {t('votes', lang)}
+          </span>
         </div>
       </div>
-      <div className="px-6 pb-4 text-right text-xs text-muted-foreground">{t('inDevelopment', lang)}</div>
     </button>
   );
 }

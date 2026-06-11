@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
-import { Button } from "./ui/button";
 import { BookmarkPlus, FileText, Trash2, X } from "lucide-react";
 import type { PricingModel } from "../data/types";
 import {
@@ -17,6 +15,7 @@ import {
   estimateTokensWithDeepSeekRule,
 } from "../utils/deepseekTokenizer";
 import { t, formatCurrency, formatNumber, type Language } from "./i18n";
+import { getProviderColor } from "../utils/providerColors";
 
 type CalculatorPanelProps = {
   models: PricingModel[];
@@ -130,6 +129,37 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
   const [result, setResult] = useState<{ perCall: number; monthly: number; matchedTierCondition: string | null } | null>(null);
   const [savedResults, setSavedResults] = useState<SavedResult[]>([]);
 
+  const [modelSearch, setModelSearch] = useState('');
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [modelProviderFilter, setModelProviderFilter] = useState<string | null>(null);
+  const modelPickerRef = useRef<HTMLDivElement>(null);
+
+  const calcProviders = useMemo(() => [...new Set(models.map((m) => m.provider))], [models]);
+
+  const modelSearchResults = useMemo(() => {
+    let list = models;
+    if (modelProviderFilter) {
+      list = list.filter((m) => m.provider === modelProviderFilter);
+    }
+    if (modelSearch.trim()) {
+      const kw = modelSearch.toLowerCase();
+      list = list.filter((m) => m.name.toLowerCase().includes(kw) || m.provider.toLowerCase().includes(kw));
+    }
+    return list;
+  }, [models, modelSearch, modelProviderFilter]);
+
+  const selectedModelObj = useMemo(() => models.find((m) => m.id === selectedModel), [models, selectedModel]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modelPickerRef.current && !modelPickerRef.current.contains(e.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const computeCosts = () => {
     const model = models.find((m) => m.id === selectedModel);
     if (!model) return null;
@@ -229,212 +259,333 @@ export function CalculatorPanel({ models, currency, unit, lang }: CalculatorPane
   const totalMonthly = savedResults.reduce((sum, item) => sum + item.monthly, 0);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 transition-colors">
-      <h3 className="text-lg mb-6">{t('singleRequestCalculator', lang)}</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 16, alignItems: 'start' }}>
+      {/* Left: Calculator form */}
+      <div style={{ background: 'var(--card)', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 20, color: 'var(--foreground)' }}>
+          {t('singleRequestCalculator', lang)}
+        </h3>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>{t('model', lang)}</Label>
-          <Select
-            value={selectedModel}
-            onValueChange={(value) => {
-              setSelectedModel(value);
-              setResult(null);
-            }}
-          >
-            <SelectTrigger className="border-border">
-              <SelectValue placeholder={t('selectModel', lang)} />
-            </SelectTrigger>
-            <SelectContent>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.name} ({model.provider})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 mb-1">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <Label>{t('pasteContent', lang)}</Label>
-          </div>
-          <Textarea
-            value={pastedContent}
-            onChange={(e) => {
-              setPastedContent(e.target.value);
-              setResult(null);
-            }}
-            placeholder={t('pasteContentPlaceholder', lang)}
-            className="border-border min-h-[120px] resize-y font-mono text-sm"
-          />
-          {pastedContent && (
-            <p className="text-xs text-muted-foreground">
-              {t('tokensDetected', lang, { count: formatNumber(detectedTokens, lang) })}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('inputTokens', lang)}</Label>
-            <Input
-              type="number"
-              value={inputTokens}
-              onChange={(e) => {
-                setInputTokens(e.target.value);
-                setResult(null);
-              }}
-              placeholder="1000"
-              className="border-border"
-            />
-          </div>
+            <Label>{t('model', lang)}</Label>
+            <div ref={modelPickerRef} style={{ position: 'relative' }}>
+              {selectedModelObj && !modelDropdownOpen ? (
+                <button
+                  type="button"
+                  onClick={() => { setModelDropdownOpen(true); setModelSearch(''); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '9px 14px', border: '1px solid var(--border)', borderRadius: 10,
+                    background: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  }}
+                >
+                  <div className="provider-dot" style={{ background: getProviderColor(selectedModelObj.provider) }} />
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{selectedModelObj.name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>{selectedModelObj.provider}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="2" style={{ marginLeft: 'auto' }}><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 1 }}>
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder={t('searchModels', lang)}
+                    value={modelSearch}
+                    onChange={(e) => { setModelSearch(e.target.value); setModelDropdownOpen(true); }}
+                    onFocus={() => setModelDropdownOpen(true)}
+                    autoFocus={modelDropdownOpen}
+                    style={{
+                      width: '100%', padding: '9px 14px 9px 38px',
+                      border: '1px solid var(--border)', borderRadius: 10,
+                      fontSize: 13, fontFamily: 'inherit', color: 'var(--foreground)',
+                      background: 'var(--muted)', transition: 'border-color 0.15s',
+                    }}
+                  />
+                </>
+              )}
 
-          <div className="space-y-2">
-            <Label>{t('outputTokens', lang)}</Label>
-            <Input
-              type="number"
-              value={outputTokens}
-              onChange={(e) => {
-                setOutputTokens(e.target.value);
-                setResult(null);
-              }}
-              placeholder="500"
-              className="border-border"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>{t('callsPerMonth', lang)}</Label>
-          <Input
-            type="number"
-            value={callsPerMonth}
-            onChange={(e) => {
-              setCallsPerMonth(e.target.value);
-              setResult(null);
-            }}
-            placeholder="1000"
-            className="border-border"
-          />
-        </div>
-
-        <Button
-          onClick={handleCalculate}
-          disabled={!selectedModel}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          {t('calculateBudget', lang)}
-        </Button>
-
-        {result && selectedModel && (
-          <div className="mt-6 space-y-3">
-            <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
-              <p className="text-sm text-muted-foreground mb-1">{t('perCallCost', lang)}</p>
-              <p className="text-2xl">{formatPerCallCurrency(result.perCall, currency, lang)}</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t('basedOnTokens', lang, {
-                  input: formatNumber(parseFloat(inputTokens) || 0, lang),
-                  output: formatNumber(parseFloat(outputTokens) || 0, lang),
-                })}
-              </p>
-              {result.matchedTierCondition && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('matchedTier', lang)}: {result.matchedTierCondition}
-                </p>
+              {modelDropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+                  background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10,
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.08)', zIndex: 50,
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '10px 12px 6px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+                    {calcProviders.map((p) => (
+                      <button
+                        key={p}
+                        onClick={(e) => { e.stopPropagation(); setModelProviderFilter(modelProviderFilter === p ? null : p); }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '3px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                          fontSize: 11, fontWeight: 500, fontFamily: 'inherit',
+                          background: modelProviderFilter === p ? getProviderColor(p) : 'var(--muted)',
+                          color: modelProviderFilter === p ? '#fff' : 'var(--muted-foreground)',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: modelProviderFilter === p ? '#fff' : getProviderColor(p), display: 'inline-block' }} />
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+                  {modelSearchResults.length === 0 ? (
+                    <div style={{ padding: '16px 14px', fontSize: 12, color: 'var(--muted-foreground)', textAlign: 'center' }}>
+                      {t('noModelsFound', lang)}
+                    </div>
+                  ) : modelSearchResults.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setSelectedModel(m.id);
+                        setResult(null);
+                        setModelSearch('');
+                        setModelDropdownOpen(false);
+                      }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '9px 14px', border: 'none', background: m.id === selectedModel ? 'var(--muted)' : 'transparent',
+                        cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                        fontFamily: 'inherit',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--muted)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = m.id === selectedModel ? 'var(--muted)' : 'transparent'; }}
+                    >
+                      <div className="provider-dot" style={{ background: getProviderColor(m.provider) }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--foreground)' }}>{m.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>{m.provider}</div>
+                      </div>
+                    </button>
+                  ))}
+                  </div>
+                </div>
               )}
             </div>
-
-            <div className="p-4 rounded-lg bg-accent/10 border border-accent/30">
-              <p className="text-sm text-muted-foreground mb-1">{t('monthlyEstimate', lang)}</p>
-              <p className="text-2xl">{formatCurrency(result.monthly, currency, lang)}</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t('basedOnCalls', lang, { calls: formatNumber(parseFloat(callsPerMonth) || 0, lang) })}
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveResult}
-              className="w-full gap-2 border-border"
-            >
-              <BookmarkPlus className="h-4 w-4" />
-              {t('saveCalculation', lang)}
-            </Button>
           </div>
-        )}
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <Label>{t('pasteContent', lang)}</Label>
+            </div>
+            <Textarea
+              value={pastedContent}
+              onChange={(e) => {
+                setPastedContent(e.target.value);
+                setResult(null);
+              }}
+              placeholder={t('pasteContentPlaceholder', lang)}
+              className="border-border min-h-[100px] resize-y font-mono text-sm"
+              style={{ borderRadius: 10 }}
+            />
+            {pastedContent && (
+              <p className="text-xs text-muted-foreground">
+                {t('tokensDetected', lang, { count: formatNumber(detectedTokens, lang) })}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>{t('inputTokens', lang)}</Label>
+              <Input
+                type="number"
+                value={inputTokens}
+                onChange={(e) => { setInputTokens(e.target.value); setResult(null); }}
+                placeholder="1000"
+                className="border-border"
+                style={{ borderRadius: 10 }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('outputTokens', lang)}</Label>
+              <Input
+                type="number"
+                value={outputTokens}
+                onChange={(e) => { setOutputTokens(e.target.value); setResult(null); }}
+                placeholder="500"
+                className="border-border"
+                style={{ borderRadius: 10 }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('callsPerMonth', lang)}</Label>
+            <Input
+              type="number"
+              value={callsPerMonth}
+              onChange={(e) => { setCallsPerMonth(e.target.value); setResult(null); }}
+              placeholder="1000"
+              className="border-border"
+              style={{ borderRadius: 10 }}
+            />
+          </div>
+
+          <button
+            onClick={handleCalculate}
+            disabled={!selectedModel}
+            style={{
+              width: '100%', padding: '10px 0', borderRadius: 10,
+              background: selectedModel ? 'var(--color-brand-primary)' : 'var(--muted)',
+              color: selectedModel ? '#fff' : 'var(--muted-foreground)',
+              border: 'none', cursor: selectedModel ? 'pointer' : 'not-allowed',
+              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              transition: 'opacity 0.15s',
+            }}
+          >
+            {t('calculateBudget', lang)}
+          </button>
+
+          {result && selectedModel && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+              <div style={{
+                padding: 16, borderRadius: 12,
+                background: 'color-mix(in srgb, var(--color-brand-primary) 8%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--color-brand-primary) 20%, transparent)',
+              }}>
+                <p style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 4 }}>{t('perCallCost', lang)}</p>
+                <p className="font-mono-jet" style={{ fontSize: 22, fontWeight: 600, color: 'var(--foreground)' }}>
+                  {formatPerCallCurrency(result.perCall, currency, lang)}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 6 }}>
+                  {t('basedOnTokens', lang, {
+                    input: formatNumber(parseFloat(inputTokens) || 0, lang),
+                    output: formatNumber(parseFloat(outputTokens) || 0, lang),
+                  })}
+                </p>
+                {result.matchedTierCondition && (
+                  <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 2 }}>
+                    {t('matchedTier', lang)}: {result.matchedTierCondition}
+                  </p>
+                )}
+              </div>
+
+              <div style={{
+                padding: 16, borderRadius: 12,
+                background: 'var(--muted)',
+                border: '1px solid var(--border)',
+              }}>
+                <p style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 4 }}>{t('monthlyEstimate', lang)}</p>
+                <p className="font-mono-jet" style={{ fontSize: 22, fontWeight: 600, color: 'var(--foreground)' }}>
+                  {formatCurrency(result.monthly, currency, lang)}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 6 }}>
+                  {t('basedOnCalls', lang, { calls: formatNumber(parseFloat(callsPerMonth) || 0, lang) })}
+                </p>
+              </div>
+
+              <button
+                onClick={handleSaveResult}
+                style={{
+                  width: '100%', padding: '8px 0', borderRadius: 10,
+                  background: 'transparent', border: '1px solid var(--border)',
+                  color: 'var(--foreground)', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 500, fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'border-color 0.15s',
+                }}
+              >
+                <BookmarkPlus style={{ width: 14, height: 14 }} />
+                {t('saveCalculation', lang)}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mt-8 rounded-xl border border-dashed border-border/80 bg-background/40 p-4">
-        <div className="mb-4 flex items-center justify-between gap-3">
+      {/* Right: Saved results */}
+      <div style={{
+        background: 'var(--card)', borderRadius: 16, padding: 24,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+        border: '1px dashed var(--border)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <p className="text-sm font-semibold">{t('savedCalculations', lang)}</p>
-            <p className="text-xs text-muted-foreground">{t('savedCalculationsDesc', lang)}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--foreground)' }}>{t('savedCalculations', lang)}</p>
+            <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 2 }}>{t('savedCalculationsDesc', lang)}</p>
           </div>
           {savedResults.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-destructive"
+            <button
               onClick={handleClearSaved}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: '#EF4444', fontSize: 12, fontFamily: 'inherit',
+              }}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 style={{ width: 13, height: 13 }} />
               {t('clearAll', lang)}
-            </Button>
+            </button>
           )}
         </div>
 
         {savedResults.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('noSavedCalculations', lang)}</p>
+          <p style={{ fontSize: 12, color: 'var(--muted-foreground)', textAlign: 'center', padding: '32px 0' }}>
+            {t('noSavedCalculations', lang)}
+          </p>
         ) : (
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {savedResults.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card/70 p-3"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: 12, borderRadius: 10,
+                  border: '1px solid var(--border)', background: 'var(--background)',
+                }}
               >
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{item.modelName}</p>
-                  <p className="text-xs text-muted-foreground">{item.provider}</p>
+                <div className="provider-dot" style={{ background: getProviderColor(item.provider), flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 500 }}>{item.modelName}</p>
+                  <p style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>{item.provider}</p>
                   {item.matchedTierCondition && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p style={{ fontSize: 10, color: 'var(--muted-foreground)', marginTop: 2 }}>
                       {t('matchedTier', lang)}: {item.matchedTierCondition}
                     </p>
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono">
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <p className="font-mono-jet" style={{ fontSize: 13, fontWeight: 500 }}>
                     {formatPerCallCurrency(item.perCall, currency, lang)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p style={{ fontSize: 10, color: 'var(--muted-foreground)' }}>
                     {t('monthlyEstimate', lang)}: {formatCurrency(item.monthly, currency, lang)}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
+                <button
                   onClick={() => handleRemoveSaved(item.id)}
+                  style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    color: 'var(--muted-foreground)', padding: 4,
+                  }}
                 >
-                  <X className="h-4 w-4" />
-                </Button>
+                  <X style={{ width: 14, height: 14 }} />
+                </button>
               </div>
             ))}
 
-            <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/20 p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{t('savedTotals', lang)}</span>
-                <span className="text-xs text-muted-foreground">{t('savedTotalsDesc', lang)}</span>
+            <div style={{
+              padding: 12, borderRadius: 10,
+              background: 'var(--muted)', fontSize: 12,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontWeight: 600 }}>{t('savedTotals', lang)}</span>
+                <span style={{ fontSize: 10, color: 'var(--muted-foreground)' }}>{t('savedTotalsDesc', lang)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 2 }}>
                 <span>{t('totalPerCallCost', lang)}</span>
-                <span className="font-mono">{formatPerCallCurrency(totalPerCall, currency, lang)}</span>
+                <span className="font-mono-jet">{formatPerCallCurrency(totalPerCall, currency, lang)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
                 <span>{t('totalMonthlyCost', lang)}</span>
-                <span className="font-mono">{formatCurrency(totalMonthly, currency, lang)}</span>
+                <span className="font-mono-jet">{formatCurrency(totalMonthly, currency, lang)}</span>
               </div>
             </div>
           </div>

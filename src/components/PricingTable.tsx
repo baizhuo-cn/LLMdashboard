@@ -7,6 +7,7 @@ import {
   type TokenUnit,
 } from "../utils/pricing";
 import { t, formatCurrency, type Language } from "./i18n";
+import { getProviderColor } from "../utils/providerColors";
 
 export type SortField =
   | "inputPrice"
@@ -93,8 +94,11 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
                   {index === 0 && (
                     <td rowSpan={tiers.length} className="px-6 py-4 align-top">
                       <div>
-                        <div>{model.name}</div>
-                        <div className="text-xs text-muted-foreground">{model.provider}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div className="provider-dot" style={{ background: getProviderColor(model.provider) }} />
+                          {model.name}
+                        </div>
+                        <div className="text-xs text-muted-foreground" style={{ paddingLeft: 16 }}>{model.provider}</div>
                       </div>
                     </td>
                   )}
@@ -151,8 +155,11 @@ export function PricingTable({ models, sortField, sortDirection, onSort, currenc
           >
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
-                <div className="text-base font-semibold leading-tight">{model.name}</div>
-                <div className="text-xs text-muted-foreground">{model.provider}</div>
+                <div className="text-base font-semibold leading-tight" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="provider-dot" style={{ background: getProviderColor(model.provider) }} />
+                  {model.name}
+                </div>
+                <div className="text-xs text-muted-foreground" style={{ paddingLeft: 16 }}>{model.provider}</div>
               </div>
               <button
                 type="button"

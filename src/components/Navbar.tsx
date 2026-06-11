@@ -1,6 +1,4 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Badge } from "./ui/badge";
-import { Sun, Moon } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { t, type Language } from "./i18n";
 import { type SupportedCurrency, type TokenUnit } from "../utils/pricing";
 
@@ -17,6 +15,30 @@ type NavbarProps = {
   onLangChange: (lang: Language) => void;
 };
 
+function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="seg-control">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`seg-control-btn ${value === opt.value ? 'seg-control-btn-active' : 'seg-control-btn-inactive'}`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function Navbar({
   activeTab,
   onTabChange,
@@ -27,7 +49,7 @@ export function Navbar({
   theme,
   onThemeChange,
   lang,
-  onLangChange
+  onLangChange,
 }: NavbarProps) {
   const tabs = [
     { id: 'dashboard', label: t('dashboard', lang) },
@@ -37,75 +59,75 @@ export function Navbar({
   ];
 
   return (
-    <nav className="navbar-shell sticky top-0 z-50 border-b border-border transition-colors">
-      <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:px-10 xl:px-[120px]">
-        <div className="navbar-layout navbar-container flex flex-col gap-3">
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="navbar-brand-text font-mono text-sm font-normal">LLMguide模型导员</span>
-            <Badge variant="outline" className="border-muted-foreground/30 text-xs">
-              {t('alpha', lang)}
-            </Badge>
-          </div>
+    <nav className="navbar-redesign">
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', height: 56, gap: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-brand-primary)' }} />
+          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--foreground)' }}>LLMguide</span>
+          <span style={{ fontSize: 10, fontWeight: 500, padding: '2px 7px', borderRadius: 4, background: 'var(--muted)', color: 'var(--muted-foreground)', letterSpacing: '0.03em' }}>
+            {t('alpha', lang).toUpperCase()}
+          </span>
+        </div>
 
-          <div className="navbar-tabs-wrap flex min-w-0 items-center justify-start gap-2 overflow-x-auto scrollbar-none">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`navbar-tab-btn relative whitespace-nowrap transition-all duration-200 ${activeTab === tab.id
-                    ? 'navbar-tab-active'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="navbar-controls-wrap flex items-center justify-start gap-2 overflow-x-auto border-t border-border/50 pt-3 scrollbar-none">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {tabs.map((tab) => (
             <button
-              onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
-              className="navbar-control-btn flex items-center justify-center border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Toggle theme"
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`tab-btn ${activeTab === tab.id ? 'tab-btn-active' : ''}`}
             >
-              {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+              {tab.label}
             </button>
+          ))}
+        </div>
 
-            <div className="h-4 w-px bg-border hidden sm:block" />
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <SegmentedControl
+            options={[
+              { value: 'CNY' as SupportedCurrency, label: 'CNY ￥' },
+              { value: 'USD' as SupportedCurrency, label: 'USD' },
+              { value: 'EUR' as SupportedCurrency, label: 'EUR' },
+            ]}
+            value={currency}
+            onChange={onCurrencyChange}
+          />
 
-            <Select value={lang} onValueChange={onLangChange}>
-              <SelectTrigger className="navbar-control w-[84px] border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="zh">中文</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-              </SelectContent>
-            </Select>
+          <div style={{ width: 1, height: 14, background: 'var(--border)', margin: '0 2px' }} />
 
-            <Select value={currency} onValueChange={(value) => onCurrencyChange(value as SupportedCurrency)}>
-              <SelectTrigger className="navbar-control w-[110px] border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CNY">CNY (￥)</SelectItem>
-                <SelectItem value="USD">USD ($)</SelectItem>
-                <SelectItem value="EUR">EUR (€)</SelectItem>
-              </SelectContent>
-            </Select>
+          <SegmentedControl
+            options={[
+              { value: 'MTok' as TokenUnit, label: 'MTok' },
+              { value: 'KTok' as TokenUnit, label: 'KTok' },
+            ]}
+            value={unit}
+            onChange={onUnitChange}
+          />
 
-            <Select value={unit} onValueChange={(value) => onUnitChange(value as TokenUnit)}>
-              <SelectTrigger className="navbar-control w-[96px] border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MTok">MTok</SelectItem>
-                <SelectItem value="KTok">KTok</SelectItem>
-              </SelectContent>
-            </Select>
+          <div style={{ width: 1, height: 14, background: 'var(--border)', margin: '0 2px' }} />
 
-          </div>
+          <SegmentedControl
+            options={[
+              { value: 'zh' as Language, label: '中文' },
+              { value: 'en' as Language, label: 'EN' },
+            ]}
+            value={lang}
+            onChange={onLangChange}
+          />
+
+          <div style={{ width: 1, height: 14, background: 'var(--border)', margin: '0 2px' }} />
+
+          <button
+            onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
+            style={{
+              width: 32, height: 32, borderRadius: 8,
+              border: '1px solid var(--border)', background: 'var(--card)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--muted-foreground)', fontSize: 15, transition: 'all 0.15s',
+            }}
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? <Moon style={{ width: 14, height: 14 }} /> : <Sun style={{ width: 14, height: 14 }} />}
+          </button>
         </div>
       </div>
     </nav>
